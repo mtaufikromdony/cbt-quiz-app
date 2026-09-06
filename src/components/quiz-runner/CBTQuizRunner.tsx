@@ -1,20 +1,24 @@
 import React, { useState, useEffect } from 'react';
-import { useQuiz } from '../../context/QuizContext';
-import type { QuizAttempt, UserAnswer } from '../../types/quiz';
+import { useQuiz } from '@/context/QuizContext';
+import type { QuizAttempt, UserAnswer } from '@/types/quiz';
 import { QuizResultModal } from './QuizResultModal';
-import { soundFx } from '../../utils/sound';
-import { ArrowLeft, Clock, Flag, Check, ChevronLeft, ChevronRight, Grid, Volume2 } from 'lucide-react';
+import { soundFx } from '@/utils/sound';
+import { Card, CardHeader, CardContent, CardFooter } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Input } from '@/components/ui/input';
+import { ArrowLeft, Clock, Flag, Check, ChevronLeft, ChevronRight, Grid, Volume2, AlertCircle } from 'lucide-react';
 
 export const CBTQuizRunner: React.FC = () => {
   const { activeSet, runnerMode, saveAttempt, setCurrentView } = useQuiz();
 
   if (!activeSet) {
     return (
-      <div style={{ padding: '48px', textAlign: 'center' }}>
-        <h2>No Active Quiz Selected</h2>
-        <button className="btn btn-primary" onClick={() => setCurrentView('dashboard')} style={{ marginTop: '16px' }}>
+      <div className="p-12 text-center max-w-md mx-auto">
+        <h2 className="text-xl font-bold mb-4">No Active Quiz Selected</h2>
+        <Button onClick={() => setCurrentView('dashboard')}>
           Return to Dashboard
-        </button>
+        </Button>
       </div>
     );
   }
@@ -58,22 +62,28 @@ export const CBTQuizRunner: React.FC = () => {
 
     let updatedSelection: (number | string)[] = [];
 
-    if (currentQuestion.type === 'single' || currentQuestion.type === 'true-false') {
-      updatedSelection = [optionIndexOrVal];
-      soundFx.playClick();
-    } else if (currentQuestion.type === 'multiple') {
-      const idx = optionIndexOrVal as number;
-      if (currentSelection.includes(idx)) {
-        updatedSelection = currentSelection.filter(i => i !== idx);
+    if (currentQuestion.type === 'multiple') {
+      if (currentSelection.includes(optionIndexOrVal)) {
+        updatedSelection = currentSelection.filter(item => item !== optionIndexOrVal);
       } else {
-        updatedSelection = [...currentSelection, idx];
+        updatedSelection = [...currentSelection, optionIndexOrVal];
       }
-      soundFx.playClick();
-    } else if (currentQuestion.type === 'fill-blank') {
-      updatedSelection = [optionIndexOrVal as string];
+    } else {
+      updatedSelection = [optionIndexOrVal];
     }
 
-    const isCorrect = checkIsCorrect(currentQuestion, updatedSelection);
+    let isCorrect = false;
+    if (currentQuestion.type === 'multiple') {
+      const correctSet = new Set(currentQuestion.correctAnswers.map(String));
+      const userSet = new Set(updatedSelection.map(String));
+      isCorrect = correctSet.size === userSet.size && [...correctSet].every(val => userSet.has(val));
+    } else if (currentQuestion.type === 'fill-blank') {
+      const target = String(currentQuestion.correctAnswers[0] || '').trim().toLowerCase();
+      const entered = String(updatedSelection[0] || '').trim().toLowerCase();
+      isCorrect = target === entered;
+    } else {
+      isCorrect = String(currentQuestion.correctAnswers[0]) === String(updatedSelection[0]);
+    }
 
     setUserAnswers(prev => ({
       ...prev,
@@ -81,28 +91,9 @@ export const CBTQuizRunner: React.FC = () => {
         questionId: currentQuestion.id,
         selected: updatedSelection,
         isCorrect,
-        timeSpentSeconds: (prev[currentQuestion.id]?.timeSpentSeconds || 0) + 1,
-        isFlagged: flaggedIds.has(currentQuestion.id)
+        timeSpentSeconds: prev[currentQuestion.id]?.timeSpentSeconds || 0
       }
     }));
-  };
-
-  const checkIsCorrect = (q: typeof currentQuestion, selected: (number | string)[]): boolean => {
-    if (selected.length === 0) return false;
-
-    if (q.type === 'single') {
-      return selected[0] === q.correctAnswers[0];
-    } else if (q.type === 'multiple') {
-      if (selected.length !== q.correctAnswers.length) return false;
-      return q.correctAnswers.every(ca => selected.includes(ca as number));
-    } else if (q.type === 'true-false') {
-      return String(selected[0]).toLowerCase() === String(q.correctAnswers[0]).toLowerCase();
-    } else if (q.type === 'fill-blank') {
-      const uStr = String(selected[0] || '').trim().toLowerCase();
-      const targetStr = String(q.correctAnswers[0] || '').trim().toLowerCase();
-      return uStr === targetStr;
-    }
-    return false;
   };
 
   const toggleFlagQuestion = (qId: string) => {
@@ -112,7 +103,6 @@ export const CBTQuizRunner: React.FC = () => {
       else next.add(qId);
       return next;
     });
-    soundFx.playClick();
   };
 
   const handleCheckPracticeAnswer = () => {
@@ -182,229 +172,228 @@ export const CBTQuizRunner: React.FC = () => {
   }
 
   return (
-    <div style={{ padding: '0 24px 48px', maxWidth: '950px', margin: '0 auto' }}>
+    <div className="max-w-4xl mx-auto px-4 pb-16">
       {/* Header Bar */}
-      <div className="panel" style={{ padding: '14px 20px', margin: '16px 0 20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '12px' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
-          <button className="btn btn-ghost btn-sm" onClick={() => setCurrentView('dashboard')}>
-            <ArrowLeft size={16} /> Exit
-          </button>
-          <div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <span className={`badge ${runnerMode === 'exam' ? 'badge-rose' : 'badge-blue'}`}>
-                {runnerMode === 'exam' ? 'EXAM MODE' : 'PRACTICE MODE'}
-              </span>
-              <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>{activeSet.category}</span>
+      <Card className="mb-5 shadow-sm">
+        <CardContent className="p-4 flex items-center justify-between flex-wrap gap-3">
+          <div className="flex items-center gap-3">
+            <Button variant="ghost" size="sm" onClick={() => setCurrentView('dashboard')} className="gap-1.5">
+              <ArrowLeft className="w-4 h-4" /> Exit
+            </Button>
+            <div>
+              <div className="flex items-center gap-2">
+                <Badge variant={runnerMode === 'exam' ? 'destructive' : 'secondary'} className="text-[10px] uppercase font-bold tracking-wider">
+                  {runnerMode === 'exam' ? 'EXAM MODE' : 'PRACTICE MODE'}
+                </Badge>
+                <span className="text-xs text-muted-foreground">{activeSet.category}</span>
+              </div>
+              <h2 className="text-sm sm:text-base font-semibold text-foreground line-clamp-1 mt-0.5">{activeSet.title}</h2>
             </div>
-            <h2 style={{ fontSize: '1.05rem', marginTop: '2px', fontWeight: 600 }}>{activeSet.title}</h2>
           </div>
-        </div>
 
-        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-          {runnerMode === 'exam' && (
-            <div style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: '6px',
-              padding: '6px 12px',
-              borderRadius: 'var(--radius-sm)',
-              background: secondsRemaining < 120 ? 'rgba(248, 81, 73, 0.15)' : 'var(--bg-input)',
-              color: secondsRemaining < 120 ? 'var(--accent-rose)' : 'var(--text-primary)',
-              border: '1px solid var(--border-subtle)',
-              fontWeight: 600,
-              fontSize: '1rem'
-            }}>
-              <Clock size={16} />
-              <span>{formatTimer(secondsRemaining)}</span>
-            </div>
-          )}
+          <div className="flex items-center gap-2.5">
+            {runnerMode === 'exam' && (
+              <div className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md border text-sm font-bold font-mono transition-colors ${
+                secondsRemaining < 120 
+                  ? 'bg-destructive/15 text-destructive border-destructive/30 animate-pulse' 
+                  : 'bg-secondary text-foreground'
+              }`}>
+                <Clock className="w-4 h-4" />
+                <span>{formatTimer(secondsRemaining)}</span>
+              </div>
+            )}
 
-          <button className="btn btn-secondary btn-sm" onClick={() => setShowNavGrid(!showNavGrid)}>
-            <Grid size={15} /> Palette ({Object.keys(userAnswers).length}/{activeSet.questions.length})
-          </button>
-        </div>
-      </div>
+            <Button variant="outline" size="sm" onClick={() => setShowNavGrid(!showNavGrid)} className="gap-1.5">
+              <Grid className="w-4 h-4" /> Palette ({Object.keys(userAnswers).length}/{activeSet.questions.length})
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
 
       {/* Slide-out Navigation Drawer */}
       {showNavGrid && (
-        <div className="panel" style={{ padding: '16px', marginBottom: '16px' }}>
-          <h4 style={{ fontSize: '0.85rem', marginBottom: '10px', color: 'var(--text-secondary)' }}>Question Navigation:</h4>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(40px, 1fr))', gap: '6px' }}>
-            {activeSet.questions.map((q, idx) => {
-              const isAns = !!userAnswers[q.id]?.selected.length;
-              const isFlag = flaggedIds.has(q.id);
-              const isCurrent = idx === currentIndex;
+        <Card className="mb-5 shadow-sm animate-in fade-in">
+          <CardContent className="p-4">
+            <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">Question Navigator:</h4>
+            <div className="grid grid-cols-8 sm:grid-cols-10 md:grid-cols-12 gap-1.5">
+              {activeSet.questions.map((q, idx) => {
+                const isAns = !!userAnswers[q.id]?.selected.length;
+                const isFlag = flaggedIds.has(q.id);
+                const isCurrent = idx === currentIndex;
 
-              let bg = 'var(--bg-input)';
-              let color = 'var(--text-secondary)';
-              let border = '1px solid var(--border-subtle)';
+                let variant: "default" | "outline" | "secondary" | "destructive" = "outline";
+                let customClass = "h-8 text-xs font-semibold";
 
-              if (isCurrent) {
-                border = '2px solid var(--accent-blue)';
-                bg = 'rgba(56, 139, 253, 0.15)';
-                color = '#ffffff';
-              } else if (isFlag) {
-                bg = 'rgba(210, 153, 34, 0.15)';
-                color = '#d29922';
-                border = '1px solid #d29922';
-              } else if (isAns) {
-                bg = 'rgba(46, 160, 67, 0.15)';
-                color = '#3fb950';
-                border = '1px solid #2ea043';
-              }
+                if (isCurrent) {
+                  variant = "default";
+                  customClass += " ring-2 ring-primary ring-offset-1";
+                } else if (isFlag) {
+                  customClass += " bg-amber-500/20 text-amber-600 dark:text-amber-400 border-amber-500/40";
+                } else if (isAns) {
+                  customClass += " bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 border-emerald-500/40";
+                }
 
-              return (
-                <button
-                  key={q.id}
-                  onClick={() => { setCurrentIndex(idx); setPracticeRevealed(false); }}
-                  style={{
-                    padding: '8px 0',
-                    borderRadius: 'var(--radius-sm)',
-                    background: bg,
-                    color: color,
-                    border: border,
-                    fontWeight: 600,
-                    cursor: 'pointer',
-                    fontSize: '0.85rem'
-                  }}
-                >
-                  {idx + 1}
-                </button>
-              );
-            })}
-          </div>
-        </div>
+                return (
+                  <Button
+                    key={q.id}
+                    variant={variant}
+                    size="sm"
+                    className={customClass}
+                    onClick={() => { setCurrentIndex(idx); setPracticeRevealed(false); }}
+                  >
+                    {idx + 1}
+                  </Button>
+                );
+              })}
+            </div>
+          </CardContent>
+        </Card>
       )}
 
-      {/* Main Question Panel */}
-      <div className="panel" style={{ padding: '28px', marginBottom: '20px' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <span className="badge badge-gray">Question {currentIndex + 1} of {activeSet.questions.length}</span>
-            <span className="badge badge-blue">{currentQuestion.type.toUpperCase()}</span>
+      {/* Main Question Card */}
+      <Card className="mb-6 shadow-sm">
+        <CardHeader className="pb-3 border-b">
+          <div className="flex justify-between items-center">
+            <div className="flex items-center gap-2">
+              <Badge variant="secondary">Question {currentIndex + 1} of {activeSet.questions.length}</Badge>
+              <Badge variant="outline" className="uppercase text-[10px]">{currentQuestion.type}</Badge>
+            </div>
+
+            <div className="flex items-center gap-1.5">
+              <Button 
+                variant="ghost" 
+                size="icon"
+                className="h-8 w-8 text-primary"
+                onClick={() => soundFx.speak(currentQuestion.prompt)}
+                title="Speak question prompt"
+              >
+                <Volume2 className="w-4 h-4" />
+              </Button>
+
+              <Button
+                variant={flaggedIds.has(currentQuestion.id) ? 'destructive' : 'ghost'}
+                size="sm"
+                className="gap-1.5 h-8 text-xs"
+                onClick={() => toggleFlagQuestion(currentQuestion.id)}
+              >
+                <Flag className="w-3.5 h-3.5" />
+                {flaggedIds.has(currentQuestion.id) ? 'Flagged' : 'Flag'}
+              </Button>
+            </div>
           </div>
+        </CardHeader>
 
-          <div style={{ display: 'flex', gap: '6px' }}>
-            <button 
-              className="btn btn-ghost btn-sm"
-              onClick={() => soundFx.speak(currentQuestion.prompt)}
-              title="Speak question prompt"
-            >
-              <Volume2 size={16} />
-            </button>
+        <CardContent className="pt-5 pb-6">
+          <h3 className="text-base sm:text-lg font-semibold leading-relaxed text-foreground mb-6">
+            {currentQuestion.prompt}
+          </h3>
 
-            <button
-              className={`btn btn-sm ${flaggedIds.has(currentQuestion.id) ? 'btn-danger' : 'btn-ghost'}`}
-              onClick={() => toggleFlagQuestion(currentQuestion.id)}
-            >
-              <Flag size={15} />
-              {flaggedIds.has(currentQuestion.id) ? 'Flagged' : 'Flag'}
-            </button>
-          </div>
-        </div>
+          {/* Options */}
+          {currentQuestion.options ? (
+            <div className="flex flex-col gap-2.5 mb-6">
+              {currentQuestion.options.map((opt, oIdx) => {
+                const isSelected = currentSelection.includes(oIdx);
+                let stateClasses = "border-border bg-card hover:bg-accent/50 text-foreground";
 
-        <h3 style={{ fontSize: '1.15rem', fontWeight: 600, marginBottom: '20px', lineHeight: 1.5 }}>
-          {currentQuestion.prompt}
-        </h3>
+                if (isSelected) {
+                  stateClasses = "border-primary bg-primary/10 text-foreground font-medium ring-1 ring-primary";
+                }
 
-        {/* Options */}
-        {currentQuestion.options ? (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: '20px' }}>
-            {currentQuestion.options.map((opt, oIdx) => {
-              const isSelected = currentSelection.includes(oIdx);
-              let optionClass = 'option-card';
-              if (isSelected) optionClass += ' selected';
+                if (runnerMode === 'practice' && practiceRevealed) {
+                  const isRight = currentQuestion.correctAnswers.includes(oIdx);
+                  if (isRight) {
+                    stateClasses = "border-emerald-500 bg-emerald-500/15 text-emerald-950 dark:text-emerald-200 font-medium";
+                  } else if (isSelected && !isRight) {
+                    stateClasses = "border-destructive bg-destructive/15 text-destructive font-medium";
+                  }
+                }
 
-              if (runnerMode === 'practice' && practiceRevealed) {
-                const isRight = currentQuestion.correctAnswers.includes(oIdx);
-                if (isRight) optionClass += ' correct';
-                else if (isSelected && !isRight) optionClass += ' incorrect';
-              }
-
-              return (
-                <div
-                  key={oIdx}
-                  className={optionClass}
-                  onClick={() => handleSelectOption(oIdx)}
-                >
-                  <div className="option-indicator">
-                    {String.fromCharCode(65 + oIdx)}
+                return (
+                  <div
+                    key={oIdx}
+                    className={`p-3.5 rounded-lg border flex items-start gap-3.5 cursor-pointer transition-all ${stateClasses}`}
+                    onClick={() => handleSelectOption(oIdx)}
+                  >
+                    <span className={`inline-flex items-center justify-center w-6 h-6 rounded-md text-xs font-bold shrink-0 mt-0.5 ${
+                      isSelected ? 'bg-primary text-primary-foreground' : 'bg-secondary text-muted-foreground'
+                    }`}>
+                      {String.fromCharCode(65 + oIdx)}
+                    </span>
+                    <span className="text-sm leading-relaxed flex-1">{opt}</span>
                   </div>
-                  <span style={{ fontSize: '0.95rem', flex: 1 }}>{opt}</span>
+                );
+              })}
+            </div>
+          ) : (
+            <div className="mb-6">
+              <label className="text-xs font-semibold text-muted-foreground mb-1.5 block">Enter Answer:</label>
+              <Input
+                type="text"
+                placeholder="Type answer..."
+                value={currentSelection[0] || ''}
+                onChange={e => handleSelectOption(e.target.value)}
+                className="text-base py-5"
+              />
+            </div>
+          )}
+
+          {/* Practice Mode Explanation */}
+          {runnerMode === 'practice' && (
+            <div className="pt-4 border-t space-y-3">
+              {!practiceRevealed ? (
+                <div className="flex items-center gap-2">
+                  <Button size="sm" onClick={handleCheckPracticeAnswer} className="gap-1.5 bg-emerald-600 hover:bg-emerald-700 text-white">
+                    <Check className="w-4 h-4" /> Check Answer
+                  </Button>
+                  {currentQuestion.hint && (
+                    <Button variant="ghost" size="sm" onClick={() => setShowHint(!showHint)}>
+                      {showHint ? 'Hide Hint' : 'Show Hint'}
+                    </Button>
+                  )}
                 </div>
-              );
-            })}
-          </div>
-        ) : (
-          <div style={{ marginBottom: '20px' }}>
-            <label style={{ display: 'block', fontSize: '0.85rem', color: 'var(--text-secondary)', marginBottom: '6px' }}>Enter Answer:</label>
-            <input
-              type="text"
-              className="input-field"
-              placeholder="Type answer..."
-              value={currentSelection[0] || ''}
-              onChange={e => handleSelectOption(e.target.value)}
-              style={{ fontSize: '1rem', padding: '12px' }}
-            />
-          </div>
-        )}
+              ) : (
+                <div className="p-4 rounded-lg bg-secondary/50 border text-sm space-y-1">
+                  <h4 className="text-xs font-bold text-primary uppercase tracking-wider">Explanation</h4>
+                  <p className="text-sm text-foreground leading-relaxed m-0">
+                    {currentQuestion.explanation || `Correct Answer: ${currentQuestion.correctAnswers.join(', ')}`}
+                  </p>
+                </div>
+              )}
 
-        {/* Practice Mode Explanation */}
-        {runnerMode === 'practice' && (
-          <div style={{ marginTop: '18px', paddingTop: '16px', borderTop: '1px solid var(--border-subtle)' }}>
-            {!practiceRevealed ? (
-              <div style={{ display: 'flex', gap: '8px' }}>
-                <button className="btn btn-secondary btn-sm" onClick={handleCheckPracticeAnswer}>
-                  <Check size={15} color="var(--accent-emerald)" /> Check Answer
-                </button>
-                {currentQuestion.hint && (
-                  <button className="btn btn-ghost btn-sm" onClick={() => setShowHint(!showHint)}>
-                    {showHint ? 'Hide Hint' : 'Show Hint'}
-                  </button>
-                )}
-              </div>
-            ) : (
-              <div style={{ padding: '14px', borderRadius: 'var(--radius-sm)', background: 'var(--bg-input)', border: '1px solid var(--border-subtle)' }}>
-                <h4 style={{ fontSize: '0.875rem', color: 'var(--accent-blue)', marginBottom: '4px', fontWeight: 600 }}>Explanation</h4>
-                <p style={{ fontSize: '0.875rem', color: 'var(--text-primary)' }}>
-                  {currentQuestion.explanation || `Correct Answer: ${currentQuestion.correctAnswers.join(', ')}`}
-                </p>
-              </div>
-            )}
+              {showHint && currentQuestion.hint && (
+                <div className="p-3 rounded-lg bg-amber-500/10 border border-amber-500/30 text-amber-700 dark:text-amber-300 text-xs flex items-center gap-2">
+                  <AlertCircle className="w-4 h-4 shrink-0" />
+                  <span>Hint: {currentQuestion.hint}</span>
+                </div>
+              )}
+            </div>
+          )}
+        </CardContent>
 
-            {showHint && currentQuestion.hint && (
-              <div style={{ marginTop: '8px', padding: '10px 14px', borderRadius: 'var(--radius-sm)', background: 'rgba(210, 153, 34, 0.12)', border: '1px solid rgba(210, 153, 34, 0.3)', color: '#d29922', fontSize: '0.85rem' }}>
-                Hint: {currentQuestion.hint}
-              </div>
-            )}
-          </div>
-        )}
-      </div>
-
-      {/* Nav Controls */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <button
-          className="btn btn-secondary"
-          onClick={() => { setCurrentIndex(prev => Math.max(0, prev - 1)); setPracticeRevealed(false); }}
-          disabled={currentIndex === 0}
-          style={{ opacity: currentIndex === 0 ? 0.5 : 1 }}
-        >
-          <ChevronLeft size={16} /> Previous
-        </button>
-
-        {currentIndex < activeSet.questions.length - 1 ? (
-          <button
-            className="btn btn-primary"
-            onClick={() => { setCurrentIndex(prev => prev + 1); setPracticeRevealed(false); }}
+        <CardFooter className="pt-4 border-t flex justify-between items-center">
+          <Button
+            variant="outline"
+            onClick={() => { setCurrentIndex(prev => Math.max(0, prev - 1)); setPracticeRevealed(false); }}
+            disabled={currentIndex === 0}
+            className="gap-1.5"
           >
-            Next Question <ChevronRight size={16} />
-          </button>
-        ) : (
-          <button className="btn btn-primary" onClick={handleCompleteQuiz}>
-            Submit Test <Check size={16} />
-          </button>
-        )}
-      </div>
+            <ChevronLeft className="w-4 h-4" /> Previous
+          </Button>
+
+          {currentIndex < activeSet.questions.length - 1 ? (
+            <Button
+              onClick={() => { setCurrentIndex(prev => prev + 1); setPracticeRevealed(false); }}
+              className="gap-1.5"
+            >
+              Next Question <ChevronRight className="w-4 h-4" />
+            </Button>
+          ) : (
+            <Button onClick={handleCompleteQuiz} className="gap-1.5 bg-emerald-600 hover:bg-emerald-700 text-white">
+              Submit Test <Check className="w-4 h-4" />
+            </Button>
+          )}
+        </CardFooter>
+      </Card>
     </div>
   );
 };

@@ -1,6 +1,10 @@
 import React, { useState } from 'react';
-import type { QuizSet } from '../../types/quiz';
-import { Play, X, Layers, Shuffle } from 'lucide-react';
+import type { QuizSet } from '@/types/quiz';
+import { Dialog, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Input } from '@/components/ui/input';
+import { Play, Layers, Shuffle, Clock } from 'lucide-react';
 
 interface Props {
   quizSet: QuizSet;
@@ -55,136 +59,129 @@ export const QuizConfigModal: React.FC<Props> = ({ quizSet, mode, onClose, onSta
   };
 
   return (
-    <div style={{
-      position: 'fixed',
-      top: 0,
-      left: 0,
-      right: 0,
-      bottom: 0,
-      backgroundColor: 'rgba(0, 0, 0, 0.7)',
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      zIndex: 1000,
-      padding: '24px'
-    }}>
-      <div className="panel" style={{ width: '100%', maxWidth: '580px', padding: '28px' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-          <div>
-            <h2 style={{ fontSize: '1.2rem', color: 'var(--text-primary)' }}>Session Setup</h2>
-            <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>{quizSet.title}</p>
-          </div>
-          <button className="btn btn-ghost btn-sm" onClick={onClose}><X size={18} /></button>
+    <Dialog open={true} onClose={onClose} className="max-w-xl">
+      <DialogHeader>
+        <div className="flex items-center gap-2">
+          <DialogTitle>Session Setup</DialogTitle>
+          <Badge variant="blue" className="uppercase text-[10px]">{mode}</Badge>
         </div>
+        <DialogDescription className="line-clamp-1">{quizSet.title}</DialogDescription>
+      </DialogHeader>
 
+      <div className="space-y-5 py-2">
         {presets.length > 0 && (
-          <div style={{ marginBottom: '20px' }}>
-            <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-secondary)', marginBottom: '8px' }}>
+          <div>
+            <label className="text-xs font-semibold text-muted-foreground mb-2 block">
               Batch Split Presets (50 Questions):
             </label>
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', maxHeight: '120px', overflowY: 'auto' }}>
+            <div className="flex flex-wrap gap-1.5 max-h-28 overflow-y-auto p-1 bg-secondary/30 rounded-lg border">
               {presets.map((p, idx) => (
-                <button
+                <Button
                   key={idx}
-                  className={`btn btn-sm ${startRange === p.start && selectedCount === p.count && !randomize ? 'btn-primary' : 'btn-secondary'}`}
+                  variant={startRange === p.start && selectedCount === p.count && !randomize ? 'default' : 'outline'}
+                  size="sm"
+                  className="text-xs h-7"
                   onClick={() => handleApplyPreset(p.start, p.count)}
                 >
                   {p.label}
-                </button>
+                </Button>
               ))}
             </div>
           </div>
         )}
 
-        <div style={{ marginBottom: '18px' }}>
-          <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-secondary)', marginBottom: '8px' }}>
+        <div>
+          <label className="text-xs font-semibold text-muted-foreground mb-2 block">
             Number of Questions:
           </label>
-          <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+          <div className="flex gap-2 flex-wrap">
             {[10, 25, 50, 100, totalQuestions].map(count => {
               if (count > totalQuestions && count !== totalQuestions) return null;
               return (
-                <button
+                <Button
                   key={count}
-                  className={`btn btn-sm ${selectedCount === count ? 'btn-primary' : 'btn-secondary'}`}
+                  variant={selectedCount === count ? 'default' : 'outline'}
+                  size="sm"
                   onClick={() => { setSelectedCount(count); setCustomTime(Math.ceil(count * 1.2)); }}
                 >
                   {count === totalQuestions ? `All (${totalQuestions}q)` : `${count} Questions`}
-                </button>
+                </Button>
               );
             })}
           </div>
         </div>
 
         {!randomize && (
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px', marginBottom: '18px' }}>
+          <div className="grid grid-cols-2 gap-4">
             <div>
-              <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-secondary)', marginBottom: '6px' }}>
+              <label className="text-xs font-semibold text-muted-foreground mb-1.5 block">
                 Start Question #:
               </label>
-              <input
+              <Input
                 type="number"
                 min={1}
                 max={totalQuestions}
-                className="input-field"
                 value={startRange}
                 onChange={e => setStartRange(Math.max(1, Math.min(totalQuestions, Number(e.target.value))))}
               />
             </div>
 
             <div>
-              <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-secondary)', marginBottom: '6px' }}>
+              <label className="text-xs font-semibold text-muted-foreground mb-1.5 block">
                 Active Range:
               </label>
-              <div style={{ padding: '8px 12px', background: 'var(--bg-input)', border: '1px solid var(--border-subtle)', borderRadius: 'var(--radius-sm)', fontSize: '0.875rem', color: 'var(--accent-blue)', fontWeight: 600 }}>
+              <div className="h-9 px-3 flex items-center rounded-md border bg-secondary/50 text-sm font-semibold text-primary">
                 Q{startRange} – Q{Math.min(totalQuestions, startRange + selectedCount - 1)}
               </div>
             </div>
           </div>
         )}
 
-        <div style={{ marginBottom: '20px' }}>
-          <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-secondary)', marginBottom: '8px' }}>
+        <div>
+          <label className="text-xs font-semibold text-muted-foreground mb-2 block">
             Question Order:
           </label>
-          <div style={{ display: 'flex', gap: '8px' }}>
-            <button
-              className={`btn btn-sm ${!randomize ? 'btn-primary' : 'btn-secondary'}`}
+          <div className="flex gap-2">
+            <Button
+              variant={!randomize ? 'default' : 'outline'}
+              size="sm"
+              className="gap-1.5"
               onClick={() => setRandomize(false)}
             >
-              <Layers size={14} /> Sequential Order
-            </button>
-            <button
-              className={`btn btn-sm ${randomize ? 'btn-primary' : 'btn-secondary'}`}
+              <Layers className="w-3.5 h-3.5" /> Sequential Order
+            </Button>
+            <Button
+              variant={randomize ? 'default' : 'outline'}
+              size="sm"
+              className="gap-1.5"
               onClick={() => setRandomize(true)}
             >
-              <Shuffle size={14} /> Random Order
-            </button>
+              <Shuffle className="w-3.5 h-3.5" /> Random Order
+            </Button>
           </div>
         </div>
 
         {mode === 'exam' && (
-          <div style={{ marginBottom: '20px' }}>
-            <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-secondary)', marginBottom: '6px' }}>
-              Exam Timer (Minutes):
+          <div>
+            <label className="text-xs font-semibold text-muted-foreground mb-1.5 flex items-center gap-1.5">
+              <Clock className="w-3.5 h-3.5" /> Exam Timer (Minutes):
             </label>
-            <input
+            <Input
               type="number"
               min={1}
-              className="input-field"
               value={customTime}
               onChange={e => setCustomTime(Number(e.target.value))}
             />
           </div>
         )}
-
-        <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px' }}>
-          <button className="btn btn-secondary" onClick={onClose}>Cancel</button>
-          <button className="btn btn-primary" onClick={handleStart}>
-            <Play size={16} /> Start {mode.toUpperCase()} ({selectedCount} Questions)
-          </button>
-        </div>
       </div>
-    </div>
+
+      <DialogFooter>
+        <Button variant="outline" onClick={onClose}>Cancel</Button>
+        <Button onClick={handleStart} className="gap-1.5">
+          <Play className="w-4 h-4" /> Start {mode.toUpperCase()} ({selectedCount} Questions)
+        </Button>
+      </DialogFooter>
+    </Dialog>
   );
 };

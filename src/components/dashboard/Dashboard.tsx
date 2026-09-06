@@ -1,10 +1,14 @@
 import React, { useState } from 'react';
-import { useQuiz } from '../../context/QuizContext';
-import { exportQuizSetToCSV, exportQuizSetToJSON } from '../../utils/exportImport';
+import { useQuiz } from '@/context/QuizContext';
+import { exportQuizSetToCSV, exportQuizSetToJSON } from '@/utils/exportImport';
 import { BulkImportModal } from '../quiz-editor/BulkImportModal';
 import { QuizConfigModal } from '../common/QuizConfigModal';
-import type { QuizSet } from '../../types/quiz';
-import { Play, BookOpen, Edit, Trash2, Download, Search, Plus, Upload, Clock, FileSpreadsheet } from 'lucide-react';
+import type { QuizSet } from '@/types/quiz';
+import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Input } from '@/components/ui/input';
+import { Play, BookOpen, Edit, Trash2, Download, Search, Plus, Upload, Clock, FileSpreadsheet, Layers, CheckCircle2 } from 'lucide-react';
 
 export const Dashboard: React.FC = () => {
   const { quizSets, startConfiguredQuiz, startConfiguredFlashcard, openEditor, deleteQuizSet, getStats } = useQuiz();
@@ -35,51 +39,51 @@ export const Dashboard: React.FC = () => {
   };
 
   return (
-    <div style={{ padding: '0 24px 48px', maxWidth: '1200px', margin: '0 auto' }}>
-      {/* Header Banner */}
-      <div className="panel" style={{ padding: '24px 28px', margin: '16px 0 28px' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '20px' }}>
-          <div>
-            <h2 style={{ fontSize: '1.5rem', marginBottom: '4px', color: 'var(--text-primary)' }}>
-              Question Sets
-            </h2>
-            <p style={{ color: 'var(--text-secondary)', fontSize: '0.95rem' }}>
-              Build practice exams, study with flashcards, and track your scores offline.
-            </p>
-          </div>
+    <div className="max-w-7xl mx-auto px-4 pb-16">
+      {/* Header Banner Card */}
+      <Card className="mb-8 border bg-card/60 backdrop-blur shadow-sm">
+        <CardContent className="p-6">
+          <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
+            <div>
+              <h2 className="text-2xl font-bold tracking-tight text-foreground">
+                Question Sets
+              </h2>
+              <p className="text-sm text-muted-foreground mt-1">
+                Build practice exams, study with flashcards, and track your scores offline.
+              </p>
+            </div>
 
-          <div style={{ display: 'flex', gap: '12px' }}>
-            <div style={{ padding: '10px 18px', borderRadius: 'var(--radius-sm)', background: 'var(--bg-elevated)', border: '1px solid var(--border-subtle)', textAlign: 'center' }}>
-              <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', display: 'block' }}>QUIZ SETS</span>
-              <strong style={{ fontSize: '1.25rem', color: 'var(--accent-blue)' }}>{stats.totalQuizzes}</strong>
-            </div>
-            <div style={{ padding: '10px 18px', borderRadius: 'var(--radius-sm)', background: 'var(--bg-elevated)', border: '1px solid var(--border-subtle)', textAlign: 'center' }}>
-              <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', display: 'block' }}>TOTAL QUESTIONS</span>
-              <strong style={{ fontSize: '1.25rem', color: 'var(--accent-emerald)' }}>{stats.totalQuestions}</strong>
+            <div className="flex items-center gap-3 w-full md:w-auto">
+              <div className="flex-1 md:flex-initial px-4 py-2.5 rounded-lg bg-secondary/50 border border-border text-center">
+                <span className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider block">Quiz Sets</span>
+                <span className="text-xl font-bold text-primary">{stats.totalQuizzes}</span>
+              </div>
+              <div className="flex-1 md:flex-initial px-4 py-2.5 rounded-lg bg-secondary/50 border border-border text-center">
+                <span className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider block">Questions</span>
+                <span className="text-xl font-bold text-emerald-600 dark:text-emerald-400">{stats.totalQuestions}</span>
+              </div>
             </div>
           </div>
-        </div>
-      </div>
+        </CardContent>
+      </Card>
 
       {/* Controls Bar */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', flexWrap: 'wrap', gap: '12px' }}>
+      <div className="flex flex-col sm:flex-row justify-between items-stretch sm:items-center gap-3 mb-6">
         {/* Search & Category Filter */}
-        <div style={{ display: 'flex', gap: '12px', flex: 1, minWidth: '280px' }}>
-          <div style={{ position: 'relative', flex: 1 }}>
-            <Search size={16} color="var(--text-muted)" style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)' }} />
-            <input
+        <div className="flex flex-1 gap-2.5">
+          <div className="relative flex-1">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input
               type="text"
-              className="input-field"
               placeholder="Search quiz title, tags, or description..."
-              style={{ paddingLeft: '38px' }}
+              className="pl-9 bg-background"
               value={searchQuery}
               onChange={e => setSearchQuery(e.target.value)}
             />
           </div>
 
           <select
-            className="input-field"
-            style={{ width: 'auto', minWidth: '150px' }}
+            className="h-9 rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring cursor-pointer"
             value={selectedCategory}
             onChange={e => setSelectedCategory(e.target.value)}
           >
@@ -90,59 +94,69 @@ export const Dashboard: React.FC = () => {
         </div>
 
         {/* Action Buttons */}
-        <div style={{ display: 'flex', gap: '8px' }}>
-          <button className="btn btn-secondary" onClick={() => setShowBulkImportModal(true)}>
-            <Upload size={15} /> Bulk Import
-          </button>
-          <button className="btn btn-primary" onClick={() => openEditor()}>
-            <Plus size={16} /> Create Quiz Set
-          </button>
+        <div className="flex items-center gap-2">
+          <Button variant="outline" size="sm" onClick={() => setShowBulkImportModal(true)} className="gap-1.5">
+            <Upload className="w-4 h-4" /> Bulk Import
+          </Button>
+          <Button size="sm" onClick={() => openEditor()} className="gap-1.5">
+            <Plus className="w-4 h-4" /> Create Quiz Set
+          </Button>
         </div>
       </div>
 
       {/* Quiz Sets Grid */}
       {filteredSets.length === 0 ? (
-        <div className="panel" style={{ padding: '48px', textAlign: 'center', margin: '24px 0' }}>
-          <BookOpen size={40} color="var(--text-muted)" style={{ marginBottom: '12px', opacity: 0.4 }} />
-          <h3 style={{ fontSize: '1.1rem', marginBottom: '6px' }}>No Quiz Sets Found</h3>
-          <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', marginBottom: '20px' }}>
-            {searchQuery ? 'No sets matched your search filter.' : 'Create a quiz set or use bulk import to add questions.'}
-          </p>
-          <button className="btn btn-primary" onClick={() => openEditor()}>
-            <Plus size={16} /> Create Quiz Set
-          </button>
-        </div>
+        <Card className="p-12 text-center border-dashed">
+          <CardContent className="flex flex-col items-center justify-center p-0">
+            <BookOpen className="w-12 h-12 text-muted-foreground/40 mb-3" />
+            <h3 className="text-base font-semibold mb-1">No Quiz Sets Found</h3>
+            <p className="text-sm text-muted-foreground mb-4 max-w-sm">
+              {searchQuery ? 'No sets matched your search filter.' : 'Create a quiz set or use bulk import to add questions.'}
+            </p>
+            <Button size="sm" onClick={() => openEditor()}>
+              <Plus className="w-4 h-4 mr-1.5" /> Create Quiz Set
+            </Button>
+          </CardContent>
+        </Card>
       ) : (
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '16px' }}>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
           {filteredSets.map(set => (
-            <div key={set.id} className="panel" style={{ padding: '20px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
-              <div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
-                  <span className="badge badge-blue">{set.category}</span>
-                  <div style={{ display: 'flex', gap: '2px' }}>
-                    <button
-                      className="btn btn-ghost btn-sm"
+            <Card key={set.id} className="flex flex-col justify-between hover:shadow-md hover:border-primary/40 transition-all duration-200">
+              <CardHeader className="pb-3">
+                <div className="flex items-center justify-between gap-2 mb-2">
+                  <Badge variant="blue">{set.category}</Badge>
+                  <div className="flex items-center gap-0.5">
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-7 w-7 text-muted-foreground hover:text-foreground"
                       onClick={() => exportQuizSetToJSON(set)}
                       title="Export as JSON (.json)"
                     >
-                      <Download size={14} /> JSON
-                    </button>
-                    <button
-                      className="btn btn-ghost btn-sm"
+                      <Download className="w-3.5 h-3.5" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-7 w-7 text-muted-foreground hover:text-foreground"
                       onClick={() => exportQuizSetToCSV(set)}
                       title="Export as CSV (.csv)"
                     >
-                      <FileSpreadsheet size={14} /> CSV
-                    </button>
-                    <button
-                      className="btn btn-ghost btn-sm"
+                      <FileSpreadsheet className="w-3.5 h-3.5" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-7 w-7 text-muted-foreground hover:text-foreground"
                       onClick={() => openEditor(set.id)}
                       title="Edit Quiz Set"
                     >
-                      <Edit size={14} />
-                    </button>
-                    <button
-                      className="btn btn-ghost btn-sm"
+                      <Edit className="w-3.5 h-3.5" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-7 w-7 text-muted-foreground hover:text-destructive"
                       onClick={() => {
                         if (window.confirm(`Delete "${set.title}"?`)) {
                           deleteQuizSet(set.id);
@@ -150,51 +164,60 @@ export const Dashboard: React.FC = () => {
                       }}
                       title="Delete Quiz Set"
                     >
-                      <Trash2 size={14} color="var(--accent-rose)" />
-                    </button>
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </Button>
                   </div>
                 </div>
 
-                <h3 style={{ fontSize: '1.1rem', fontWeight: 600, marginBottom: '6px' }}>{set.title}</h3>
-                <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginBottom: '14px', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
+                <CardTitle className="text-base font-semibold leading-snug line-clamp-2">
+                  {set.title}
+                </CardTitle>
+                <CardDescription className="text-xs line-clamp-2 mt-1">
                   {set.description || 'No description provided.'}
-                </p>
+                </CardDescription>
+              </CardHeader>
 
-                <div style={{ display: 'flex', gap: '14px', fontSize: '0.8rem', color: 'var(--text-muted)', marginBottom: '18px' }}>
-                  <span>{set.questions.length} Questions</span>
+              <CardContent className="pb-4">
+                <div className="flex items-center gap-4 text-xs text-muted-foreground">
+                  <span className="flex items-center gap-1">
+                    <Layers className="w-3.5 h-3.5" /> {set.questions.length} Questions
+                  </span>
                   {set.timeLimitMinutes && (
-                    <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                      <Clock size={13} /> {set.timeLimitMinutes}m Timer
+                    <span className="flex items-center gap-1">
+                      <Clock className="w-3.5 h-3.5" /> {set.timeLimitMinutes}m Timer
                     </span>
                   )}
                 </div>
-              </div>
+              </CardContent>
 
-              {/* Mode Buttons */}
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', paddingTop: '14px', borderTop: '1px solid var(--border-subtle)' }}>
-                <button
-                  className="btn btn-primary btn-sm"
+              <CardFooter className="pt-3 border-t grid grid-cols-2 gap-2">
+                <Button
+                  size="sm"
                   onClick={() => setConfigTarget({ quizSet: set, mode: 'exam' })}
+                  className="gap-1.5 text-xs font-medium"
                 >
-                  <Play size={14} /> CBT Exam
-                </button>
+                  <Play className="w-3.5 h-3.5" /> CBT Exam
+                </Button>
                 
-                <button
-                  className="btn btn-secondary btn-sm"
+                <Button
+                  variant="outline"
+                  size="sm"
                   onClick={() => setConfigTarget({ quizSet: set, mode: 'practice' })}
+                  className="gap-1.5 text-xs font-medium"
                 >
-                  Practice
-                </button>
+                  <CheckCircle2 className="w-3.5 h-3.5" /> Practice
+                </Button>
 
-                <button
-                  className="btn btn-secondary btn-sm"
-                  style={{ gridColumn: 'span 2' }}
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  className="col-span-2 text-xs font-medium"
                   onClick={() => setConfigTarget({ quizSet: set, mode: 'flashcard' })}
                 >
                   3D Flashcards
-                </button>
-              </div>
-            </div>
+                </Button>
+              </CardFooter>
+            </Card>
           ))}
         </div>
       )}

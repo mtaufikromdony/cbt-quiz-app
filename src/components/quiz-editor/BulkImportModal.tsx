@@ -1,8 +1,11 @@
 import React, { useState } from 'react';
-import { useQuiz } from '../../context/QuizContext';
-import type { Question } from '../../types/quiz';
-import { parseQuickTextToQuestions } from '../../utils/exportImport';
-import { X, Upload, FileText, CheckCircle, AlertCircle } from 'lucide-react';
+import { useQuiz } from '@/context/QuizContext';
+import type { Question } from '@/types/quiz';
+import { parseQuickTextToQuestions } from '@/utils/exportImport';
+import { Dialog, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Upload, FileText, CheckCircle2, AlertCircle } from 'lucide-react';
 
 interface Props {
   onClose: () => void;
@@ -107,42 +110,27 @@ Explanation: Spaced repetition optimizes retention curves.`
   };
 
   return (
-    <div style={{
-      position: 'fixed',
-      top: 0,
-      left: 0,
-      right: 0,
-      bottom: 0,
-      backgroundColor: 'rgba(0,0,0,0.7)',
-      backdropFilter: 'blur(8px)',
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      zIndex: 1000,
-      padding: '24px'
-    }}>
-      <div className="glass-panel animate-fade-in" style={{ width: '100%', maxWidth: '680px', maxHeight: '90vh', overflowY: 'auto', padding: '32px' }}>
-        {/* Header */}
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-            <div style={{ width: '40px', height: '40px', borderRadius: '10px', background: 'rgba(6, 182, 212, 0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <Upload size={20} color="var(--accent-secondary)" />
-            </div>
-            <div>
-              <h2 style={{ fontSize: '1.25rem' }}>Bulk Import Questions</h2>
-              <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>Import via Quick Text format or JSON/CSV files</p>
-            </div>
+    <Dialog open={true} onClose={onClose} className="max-w-2xl">
+      <DialogHeader>
+        <div className="flex items-center gap-2.5">
+          <div className="w-8 h-8 rounded-lg bg-primary/10 text-primary flex items-center justify-center">
+            <Upload className="w-4 h-4" />
           </div>
-          <button className="btn btn-ghost btn-sm" onClick={onClose}><X size={20} /></button>
+          <div>
+            <DialogTitle>Bulk Import Questions</DialogTitle>
+            <DialogDescription>Import via formatted text or JSON/CSV files</DialogDescription>
+          </div>
         </div>
+      </DialogHeader>
 
+      <div className="space-y-4 py-2">
         {/* Target Quiz Set Selection */}
-        <div style={{ marginBottom: '20px' }}>
-          <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 600, marginBottom: '8px', color: 'var(--text-secondary)' }}>
+        <div>
+          <label className="text-xs font-semibold text-muted-foreground mb-1.5 block">
             Import Into Quiz Set:
           </label>
           <select 
-            className="input-field"
+            className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
             value={selectedSetId}
             onChange={e => setSelectedSetId(e.target.value)}
           >
@@ -154,13 +142,12 @@ Explanation: Spaced repetition optimizes retention curves.`
         </div>
 
         {selectedSetId === 'new' && (
-          <div style={{ marginBottom: '20px' }}>
-            <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 600, marginBottom: '8px', color: 'var(--text-secondary)' }}>
+          <div>
+            <label className="text-xs font-semibold text-muted-foreground mb-1.5 block">
               New Quiz Title:
             </label>
-            <input 
+            <Input 
               type="text" 
-              className="input-field" 
               placeholder="e.g. AWS Certified Solutions Architect Practice" 
               value={newTitle}
               onChange={e => setNewTitle(e.target.value)}
@@ -169,26 +156,25 @@ Explanation: Spaced repetition optimizes retention curves.`
         )}
 
         {/* File Upload Option */}
-        <div style={{ marginBottom: '20px' }}>
-          <label style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '12px 16px', border: '1.5px dashed var(--border-color)', borderRadius: 'var(--radius-md)', cursor: 'pointer', background: 'var(--bg-input)' }}>
-            <FileText size={20} color="var(--accent-primary)" />
-            <span style={{ fontSize: '0.9rem', color: 'var(--text-secondary)' }}>Click to upload JSON or CSV file</span>
-            <input type="file" accept=".json,.csv,.txt" onChange={handleFileUpload} style={{ display: 'none' }} />
+        <div>
+          <label className="flex items-center justify-center gap-2 p-3.5 border-2 border-dashed rounded-lg cursor-pointer bg-secondary/30 hover:bg-secondary/50 border-muted-foreground/30 transition-colors">
+            <FileText className="w-4 h-4 text-primary" />
+            <span className="text-xs font-medium text-muted-foreground">Click to upload JSON or CSV file</span>
+            <input type="file" accept=".json,.csv,.txt" onChange={handleFileUpload} className="hidden" />
           </label>
         </div>
 
         {/* Quick Format Paste */}
-        <div style={{ marginBottom: '20px' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-            <label style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-secondary)' }}>Paste Formatted Text:</label>
-            <button className="btn btn-ghost btn-sm" onClick={handleParse} style={{ fontSize: '0.75rem', color: 'var(--accent-primary)' }}>
+        <div>
+          <div className="flex justify-between items-center mb-1.5">
+            <label className="text-xs font-semibold text-muted-foreground">Paste Formatted Text:</label>
+            <Button variant="ghost" size="sm" onClick={handleParse} className="h-7 text-xs text-primary">
               Preview Parse
-            </button>
+            </Button>
           </div>
           <textarea
-            className="input-field"
-            rows={8}
-            style={{ fontFamily: 'var(--font-mono)', fontSize: '0.85rem' }}
+            className="flex min-h-[140px] w-full rounded-md border border-input bg-background px-3 py-2 text-xs font-mono shadow-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+            rows={7}
             value={rawText}
             onChange={e => setRawText(e.target.value)}
           />
@@ -196,27 +182,26 @@ Explanation: Spaced repetition optimizes retention curves.`
 
         {/* Status & Preview */}
         {errorMsg && (
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '10px 14px', borderRadius: 'var(--radius-md)', background: 'rgba(244, 63, 94, 0.15)', color: '#f43f5e', marginBottom: '20px', fontSize: '0.85rem' }}>
-            <AlertCircle size={18} />
+          <div className="flex items-center gap-2 p-3 rounded-md bg-destructive/15 text-destructive text-xs">
+            <AlertCircle className="w-4 h-4 shrink-0" />
             <span>{errorMsg}</span>
           </div>
         )}
 
         {previewQuestions.length > 0 && (
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '10px 14px', borderRadius: 'var(--radius-md)', background: 'rgba(16, 185, 129, 0.15)', color: '#34d399', marginBottom: '20px', fontSize: '0.85rem' }}>
-            <CheckCircle size={18} />
-            <span>Ready to import <strong>{previewQuestions.length}</strong> questions!</span>
+          <div className="flex items-center gap-2 p-3 rounded-md bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 text-xs">
+            <CheckCircle2 className="w-4 h-4 shrink-0" />
+            <span>Ready to import <strong className="font-bold">{previewQuestions.length}</strong> questions!</span>
           </div>
         )}
-
-        {/* Actions */}
-        <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px' }}>
-          <button className="btn btn-secondary" onClick={onClose}>Cancel</button>
-          <button className="btn btn-primary" onClick={handleImportSubmit}>
-            Import Questions
-          </button>
-        </div>
       </div>
-    </div>
+
+      <DialogFooter>
+        <Button variant="outline" onClick={onClose}>Cancel</Button>
+        <Button onClick={handleImportSubmit}>
+          Import Questions
+        </Button>
+      </DialogFooter>
+    </Dialog>
   );
 };

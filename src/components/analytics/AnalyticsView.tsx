@@ -1,6 +1,9 @@
 import React from 'react';
 import { useQuiz } from '../../context/QuizContext';
 import { Award, Target, History, Play, AlertTriangle } from 'lucide-react';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '../ui/card';
+import { Button } from '../ui/button';
+import { Badge } from '../ui/badge';
 
 export const AnalyticsView: React.FC = () => {
   const { getStats, attempts, createWeakSpotQuiz, startQuiz } = useQuiz();
@@ -16,121 +19,136 @@ export const AnalyticsView: React.FC = () => {
   };
 
   return (
-    <div style={{ padding: '0 24px 48px', maxWidth: '1000px', margin: '0 auto' }}>
+    <div className="w-full max-w-5xl mx-auto px-4 py-8 space-y-6">
       {/* Banner */}
-      <div className="panel" style={{ padding: '24px 28px', margin: '16px 0 24px' }}>
-        <h2 style={{ fontSize: '1.5rem', marginBottom: '4px', color: 'var(--text-primary)' }}>
-          Analytics & History
-        </h2>
-        <p style={{ color: 'var(--text-secondary)', fontSize: '0.95rem' }}>
-          Track score averages, attempt history, and practice missed questions.
-        </p>
-      </div>
+      <Card className="bg-card/50 backdrop-blur-sm border-border/80 shadow-sm">
+        <CardHeader className="p-6">
+          <CardTitle className="text-2xl font-bold tracking-tight">
+            Analytics & History
+          </CardTitle>
+          <CardDescription className="text-sm text-muted-foreground mt-1">
+            Track score averages, attempt history, and practice missed questions.
+          </CardDescription>
+        </CardHeader>
+      </Card>
 
       {/* Stats Cards */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '14px', marginBottom: '24px' }}>
-        <div className="panel" style={{ padding: '16px' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '6px' }}>
-            <Award size={18} color="var(--accent-blue)" />
-            <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>AVERAGE SCORE</span>
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <Card className="p-5 shadow-xs border-border/70 hover:border-border transition-colors">
+          <div className="flex items-center gap-2 mb-2 text-primary font-medium">
+            <Award className="h-5 w-5 text-blue-500" />
+            <span className="text-xs font-semibold tracking-wider text-muted-foreground uppercase">Average Score</span>
           </div>
-          <p style={{ fontSize: '1.75rem', fontWeight: 700, color: 'var(--accent-blue)' }}>{stats.averageScore}%</p>
-        </div>
+          <p className="text-3xl font-extrabold text-blue-500">{stats.averageScore}%</p>
+        </Card>
 
-        <div className="panel" style={{ padding: '16px' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '6px' }}>
-            <Target size={18} color="var(--accent-emerald)" />
-            <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>PASSED QUIZZES</span>
+        <Card className="p-5 shadow-xs border-border/70 hover:border-border transition-colors">
+          <div className="flex items-center gap-2 mb-2 text-emerald-500 font-medium">
+            <Target className="h-5 w-5" />
+            <span className="text-xs font-semibold tracking-wider text-muted-foreground uppercase">Passed Quizzes</span>
           </div>
-          <p style={{ fontSize: '1.75rem', fontWeight: 700, color: 'var(--accent-emerald)' }}>{stats.masteredCount} / {stats.totalQuizzes}</p>
-        </div>
+          <p className="text-3xl font-extrabold text-emerald-500">{stats.masteredCount} / {stats.totalQuizzes}</p>
+        </Card>
 
-        <div className="panel" style={{ padding: '16px' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '6px' }}>
-            <History size={18} color="var(--text-secondary)" />
-            <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>TOTAL ATTEMPTS</span>
+        <Card className="p-5 shadow-xs border-border/70 hover:border-border transition-colors">
+          <div className="flex items-center gap-2 mb-2 font-medium">
+            <History className="h-5 w-5 text-muted-foreground" />
+            <span className="text-xs font-semibold tracking-wider text-muted-foreground uppercase">Total Attempts</span>
           </div>
-          <p style={{ fontSize: '1.75rem', fontWeight: 700 }}>{stats.totalAttempts}</p>
-        </div>
+          <p className="text-3xl font-extrabold text-foreground">{stats.totalAttempts}</p>
+        </Card>
 
-        <div className="panel" style={{ padding: '16px' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '6px' }}>
-            <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>STUDY DAYS</span>
+        <Card className="p-5 shadow-xs border-border/70 hover:border-border transition-colors">
+          <div className="flex items-center gap-2 mb-2 font-medium">
+            <Award className="h-5 w-5 text-amber-500" />
+            <span className="text-xs font-semibold tracking-wider text-muted-foreground uppercase">Study Days</span>
           </div>
-          <p style={{ fontSize: '1.75rem', fontWeight: 700, color: 'var(--accent-amber)' }}>{stats.streakDays} Days</p>
-        </div>
+          <p className="text-3xl font-extrabold text-amber-500">{stats.streakDays} Days</p>
+        </Card>
       </div>
 
       {/* Target Missed Questions CTA */}
-      <div className="panel" style={{ padding: '20px', marginBottom: '24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '16px' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
-          <AlertTriangle size={24} color="var(--accent-rose)" />
+      <Card className="p-6 border-rose-500/20 bg-rose-500/5 shadow-xs flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div className="flex items-start sm:items-center gap-3.5">
+          <div className="p-2.5 rounded-xl bg-rose-500/10 text-rose-500 border border-rose-500/20 shrink-0">
+            <AlertTriangle className="h-6 w-6" />
+          </div>
           <div>
-            <h3 style={{ fontSize: '1.05rem', fontWeight: 600 }}>Missed Questions Vault</h3>
-            <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
+            <h3 className="text-base font-semibold text-foreground">Missed Questions Vault</h3>
+            <p className="text-xs sm:text-sm text-muted-foreground mt-0.5">
               Combine all previously missed questions into a targeted practice session.
             </p>
           </div>
         </div>
 
-        <button className="btn btn-primary" onClick={handleGenerateWeakSpot}>
+        <Button 
+          variant="destructive" 
+          onClick={handleGenerateWeakSpot}
+          className="shrink-0 font-medium"
+        >
           Practice Missed Questions
-        </button>
-      </div>
+        </Button>
+      </Card>
 
       {/* History Log */}
-      <div className="panel" style={{ padding: '24px' }}>
-        <h3 style={{ fontSize: '1.1rem', marginBottom: '16px' }}>Attempt History Log</h3>
-
-        {attempts.length === 0 ? (
-          <div style={{ textAlign: 'center', padding: '28px', color: 'var(--text-muted)', fontSize: '0.9rem' }}>
-            No exam attempts recorded yet.
-          </div>
-        ) : (
-          <div style={{ overflowX: 'auto' }}>
-            <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: '0.875rem' }}>
-              <thead>
-                <tr style={{ borderBottom: '1px solid var(--border-subtle)', color: 'var(--text-muted)' }}>
-                  <th style={{ padding: '10px 12px' }}>Quiz Title</th>
-                  <th style={{ padding: '10px 12px' }}>Mode</th>
-                  <th style={{ padding: '10px 12px' }}>Score</th>
-                  <th style={{ padding: '10px 12px' }}>Date</th>
-                  <th style={{ padding: '10px 12px', textAlign: 'right' }}>Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {attempts.map(att => {
-                  const isPass = att.percentage >= 70;
-                  return (
-                    <tr key={att.id} style={{ borderBottom: '1px solid var(--border-subtle)' }}>
-                      <td style={{ padding: '10px 12px', fontWeight: 600 }}>{att.quizTitle}</td>
-                      <td style={{ padding: '10px 12px' }}>
-                        <span className={`badge ${att.mode === 'exam' ? 'badge-rose' : 'badge-blue'}`}>
-                          {att.mode.toUpperCase()}
-                        </span>
-                      </td>
-                      <td style={{ padding: '10px 12px', fontWeight: 600, color: isPass ? '#3fb950' : '#ff7b72' }}>
-                        {att.percentage}% ({att.score}/{att.totalPoints})
-                      </td>
-                      <td style={{ padding: '10px 12px', color: 'var(--text-muted)', fontSize: '0.8rem' }}>
-                        {new Date(att.date).toLocaleString()}
-                      </td>
-                      <td style={{ padding: '10px 12px', textAlign: 'right' }}>
-                        <button
-                          className="btn btn-ghost btn-sm"
-                          onClick={() => startQuiz(att.quizSetId, att.mode === 'flashcard' ? 'practice' : att.mode)}
-                        >
-                          <Play size={13} /> Retake
-                        </button>
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
-        )}
-      </div>
+      <Card className="shadow-xs border-border/70">
+        <CardHeader className="px-6 pt-6 pb-4">
+          <CardTitle className="text-lg font-semibold">Attempt History Log</CardTitle>
+        </CardHeader>
+        <CardContent className="px-6 pb-6">
+          {attempts.length === 0 ? (
+            <div className="text-center py-12 text-sm text-muted-foreground">
+              No exam attempts recorded yet.
+            </div>
+          ) : (
+            <div className="overflow-x-auto rounded-lg border border-border">
+              <table className="w-full border-collapse text-left text-sm">
+                <thead>
+                  <tr className="border-b border-border bg-muted/40 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                    <th className="px-4 py-3">Quiz Title</th>
+                    <th className="px-4 py-3">Mode</th>
+                    <th className="px-4 py-3">Score</th>
+                    <th className="px-4 py-3">Date</th>
+                    <th className="px-4 py-3 text-right">Actions</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-border">
+                  {attempts.map(att => {
+                    const isPass = att.percentage >= 70;
+                    return (
+                      <tr key={att.id} className="hover:bg-muted/30 transition-colors">
+                        <td className="px-4 py-3.5 font-medium text-foreground">{att.quizTitle}</td>
+                        <td className="px-4 py-3.5">
+                          <Badge variant={att.mode === 'exam' ? 'destructive' : 'blue'}>
+                            {att.mode.toUpperCase()}
+                          </Badge>
+                        </td>
+                        <td className={`px-4 py-3.5 font-bold ${isPass ? 'text-emerald-500' : 'text-rose-500'}`}>
+                          {att.percentage}% ({att.score}/{att.totalPoints})
+                        </td>
+                        <td className="px-4 py-3.5 text-xs text-muted-foreground">
+                          {new Date(att.date).toLocaleString()}
+                        </td>
+                        <td className="px-4 py-3.5 text-right">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => startQuiz(att.quizSetId, att.mode === 'flashcard' ? 'practice' : att.mode)}
+                            className="h-8 gap-1 text-xs"
+                          >
+                            <Play className="h-3.5 w-3.5 fill-current" /> Retake
+                          </Button>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </CardContent>
+      </Card>
     </div>
   );
 };
+

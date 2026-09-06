@@ -1,6 +1,10 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { useQuiz } from '../../context/QuizContext';
-import { soundFx } from '../../utils/sound';
+import { useQuiz } from '@/context/QuizContext';
+import { soundFx } from '@/utils/sound';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Card, CardContent } from '@/components/ui/card';
+import { Progress } from '@/components/ui/progress';
 import { ArrowLeft, RotateCw, Volume2, Check, ChevronRight, ChevronLeft } from 'lucide-react';
 
 export const FlashcardRunner: React.FC = () => {
@@ -8,11 +12,11 @@ export const FlashcardRunner: React.FC = () => {
 
   if (!activeSet || activeSet.questions.length === 0) {
     return (
-      <div style={{ padding: '48px', textAlign: 'center' }}>
-        <h2>No Flashcards Available</h2>
-        <button className="btn btn-primary" onClick={() => setCurrentView('dashboard')} style={{ marginTop: '16px' }}>
+      <div className="p-12 text-center max-w-md mx-auto">
+        <h2 className="text-xl font-bold mb-4">No Flashcards Available</h2>
+        <Button onClick={() => setCurrentView('dashboard')}>
           Dashboard
-        </button>
+        </Button>
       </div>
     );
   }
@@ -71,64 +75,65 @@ export const FlashcardRunner: React.FC = () => {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [handleFlip, handleRating, isFlipped, activeSet.questions.length]);
 
+  const progressPercent = ((cardIndex + 1) / activeSet.questions.length) * 100;
+
   return (
-    <div style={{ padding: '0 24px 48px', maxWidth: '760px', margin: '0 auto' }}>
+    <div className="max-w-3xl mx-auto px-4 pb-16">
       {/* Top Header */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', margin: '20px 0' }}>
-        <button className="btn btn-ghost" onClick={() => setCurrentView('dashboard')}>
-          <ArrowLeft size={16} /> Exit Flashcards
-        </button>
-        <span className="badge badge-gray">Card {cardIndex + 1} of {activeSet.questions.length}</span>
+      <div className="flex justify-between items-center my-5">
+        <Button variant="ghost" size="sm" onClick={() => setCurrentView('dashboard')} className="gap-1.5">
+          <ArrowLeft className="w-4 h-4" /> Exit Flashcards
+        </Button>
+        <Badge variant="secondary" className="font-medium">
+          Card {cardIndex + 1} of {activeSet.questions.length}
+        </Badge>
       </div>
 
       {/* Progress Bar */}
-      <div style={{ width: '100%', height: '4px', background: 'var(--bg-elevated)', borderRadius: 'var(--radius-sm)', marginBottom: '24px', overflow: 'hidden' }}>
-        <div style={{
-          height: '100%',
-          width: `${((cardIndex + 1) / activeSet.questions.length) * 100}%`,
-          background: 'var(--accent-blue)',
-          transition: 'width 0.3s ease'
-        }} />
-      </div>
+      <Progress value={progressPercent} className="h-1.5 mb-6" />
 
       {/* 3D Flip Flashcard */}
-      <div className="flashcard-perspective" style={{ marginBottom: '24px' }}>
+      <div className="flashcard-perspective mb-6">
         <div className={`flashcard-inner ${isFlipped ? 'flipped' : ''}`}>
           {/* Card Front */}
-          <div className="flashcard-face panel">
-            <div style={{ display: 'flex', flexDirection: 'column', flex: 1, minHeight: 0 }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-                <span className="badge badge-blue">Prompt</span>
-                <button
-                  className="btn btn-ghost btn-sm"
+          <div className="flashcard-face bg-card border shadow-sm">
+            <div className="flex flex-col flex-1 min-h-0">
+              <div className="flex justify-between items-center mb-2">
+                <Badge variant="blue">Prompt</Badge>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-8 w-8 text-primary"
                   onClick={(e) => { e.stopPropagation(); soundFx.speak(currentQuestion.prompt); }}
                   title="Speak prompt text"
                 >
-                  <Volume2 size={18} color="var(--accent-blue)" />
-                </button>
+                  <Volume2 className="w-4 h-4" />
+                </Button>
               </div>
 
               <div className="flashcard-content-area">
-                <h3 style={{ fontSize: '1.25rem', lineHeight: 1.6, fontWeight: 600, color: 'var(--text-primary)', margin: 0 }}>
+                <h3 className="text-xl font-semibold leading-relaxed text-foreground m-0">
                   {currentQuestion.prompt}
                 </h3>
               </div>
             </div>
 
-            <div style={{ display: 'flex', justifyContent: 'center', paddingTop: '16px', borderTop: '1px solid var(--border-subtle)' }}>
-              <button className="btn btn-primary" onClick={handleFlip}>
-                <RotateCw size={16} /> Flip to Reveal Answer
-              </button>
+            <div className="flex justify-center pt-4 border-t">
+              <Button onClick={handleFlip} className="gap-2">
+                <RotateCw className="w-4 h-4" /> Flip to Reveal Answer
+              </Button>
             </div>
           </div>
 
           {/* Card Back */}
-          <div className="flashcard-face flashcard-back panel">
-            <div style={{ display: 'flex', flexDirection: 'column', flex: 1, minHeight: 0 }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-                <span className="badge badge-emerald">Correct Answer</span>
-                <button
-                  className="btn btn-ghost btn-sm"
+          <div className="flashcard-face flashcard-back bg-card border shadow-sm">
+            <div className="flex flex-col flex-1 min-h-0">
+              <div className="flex justify-between items-center mb-2">
+                <Badge variant="success">Correct Answer</Badge>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-8 w-8 text-emerald-600 dark:text-emerald-400"
                   onClick={(e) => {
                     e.stopPropagation();
                     const textToSpeak = currentQuestion.correctAnswers.join(' ') || currentQuestion.explanation || '';
@@ -136,143 +141,143 @@ export const FlashcardRunner: React.FC = () => {
                   }}
                   title="Speak answer"
                 >
-                  <Volume2 size={18} color="var(--accent-emerald)" />
-                </button>
+                  <Volume2 className="w-4 h-4" />
+                </Button>
               </div>
 
               <div className="flashcard-content-area">
                 {currentQuestion.options ? (
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                  <div className="flex flex-col gap-2">
                     {currentQuestion.options.map((opt, idx) => {
                       const isCorrect = currentQuestion.correctAnswers.includes(idx);
                       const letter = String.fromCharCode(65 + idx);
                       return (
                         <div
                           key={idx}
-                          style={{
-                            padding: '10px 14px',
-                            borderRadius: 'var(--radius-sm)',
-                            background: isCorrect ? 'rgba(46, 160, 67, 0.12)' : 'var(--bg-input)',
-                            border: isCorrect ? '1px solid rgba(46, 160, 67, 0.4)' : '1px solid var(--border-subtle)',
-                            color: isCorrect ? '#3fb950' : 'var(--text-secondary)',
-                            fontWeight: isCorrect ? 600 : 400,
-                            fontSize: '0.9rem',
-                            display: 'flex',
-                            alignItems: 'flex-start',
-                            gap: '10px',
-                            lineHeight: 1.5
-                          }}
+                          className={`p-3 rounded-lg border text-sm flex items-start gap-3 leading-relaxed transition-colors ${
+                            isCorrect 
+                              ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-950 dark:text-emerald-200 font-medium' 
+                              : 'bg-muted/40 border-border text-muted-foreground'
+                          }`}
                         >
                           <span
-                            style={{
-                              display: 'inline-flex',
-                              alignItems: 'center',
-                              justifyContent: 'center',
-                              width: '24px',
-                              height: '24px',
-                              borderRadius: '50%',
-                              background: isCorrect ? 'var(--accent-emerald)' : 'var(--bg-elevated)',
-                              color: isCorrect ? '#ffffff' : 'var(--text-muted)',
-                              fontSize: '0.75rem',
-                              fontWeight: 700,
-                              flexShrink: 0,
-                              marginTop: '1px'
-                            }}
+                            className={`inline-flex items-center justify-center w-6 h-6 rounded-full text-xs font-bold shrink-0 mt-0.5 ${
+                              isCorrect 
+                                ? 'bg-emerald-600 text-white shadow-sm' 
+                                : 'bg-secondary text-muted-foreground'
+                            }`}
                           >
-                            {isCorrect ? <Check size={14} /> : letter}
+                            {isCorrect ? <Check className="w-3.5 h-3.5" /> : letter}
                           </span>
-                          <span style={{ flex: 1 }}>{opt}</span>
+                          <span className="flex-1">{opt}</span>
                         </div>
                       );
                     })}
                   </div>
                 ) : (
-                  <div style={{ padding: '16px', borderRadius: 'var(--radius-sm)', background: 'rgba(46, 160, 67, 0.12)', border: '1px solid rgba(46, 160, 67, 0.3)' }}>
-                    <h4 style={{ fontSize: '1.2rem', color: '#3fb950', fontWeight: 600, margin: 0 }}>
+                  <div className="p-4 rounded-lg bg-emerald-500/10 border border-emerald-500/30">
+                    <h4 className="text-lg font-bold text-emerald-600 dark:text-emerald-400 m-0">
                       {currentQuestion.correctAnswers.join(', ')}
                     </h4>
                   </div>
                 )}
 
                 {currentQuestion.explanation && (
-                  <div style={{
-                    marginTop: '16px',
-                    padding: '12px 16px',
-                    borderRadius: 'var(--radius-sm)',
-                    background: 'var(--bg-input)',
-                    border: '1px solid var(--border-subtle)',
-                    fontSize: '0.875rem',
-                    color: 'var(--text-secondary)',
-                    lineHeight: 1.6
-                  }}>
-                    <div style={{ fontWeight: 600, color: 'var(--text-primary)', marginBottom: '4px', fontSize: '0.8rem', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                      <span>💡</span> EXPLANATION
+                  <div className="mt-4 p-3.5 rounded-lg bg-secondary/50 border text-sm text-muted-foreground leading-relaxed">
+                    <div className="font-semibold text-foreground mb-1 text-xs flex items-center gap-1.5 uppercase tracking-wider">
+                      <span>💡</span> Explanation
                     </div>
-                    <p style={{ margin: 0 }}>{currentQuestion.explanation}</p>
+                    <p className="m-0 text-xs sm:text-sm">{currentQuestion.explanation}</p>
                   </div>
                 )}
               </div>
             </div>
 
-            <div style={{ display: 'flex', justifyContent: 'center', paddingTop: '16px', borderTop: '1px solid var(--border-subtle)' }}>
-              <button className="btn btn-secondary btn-sm" onClick={handleFlip}>
-                <RotateCw size={15} /> Flip Back to Prompt
-              </button>
+            <div className="flex justify-center pt-4 border-t">
+              <Button variant="secondary" size="sm" onClick={handleFlip} className="gap-2">
+                <RotateCw className="w-4 h-4" /> Flip Back to Prompt
+              </Button>
             </div>
           </div>
         </div>
       </div>
 
-      {/* Spaced Repetition Rating */}
+      {/* Spaced Repetition Rating Panel */}
       {isFlipped && (
-        <div className="panel animate-fade-in" style={{ padding: '18px 20px', textAlign: 'center', marginTop: '20px' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px', flexWrap: 'wrap', gap: '8px' }}>
-            <span style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-primary)' }}>
-              Rate Recall Difficulty
-            </span>
-            <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
-              Hotkeys: 1 (Again) · 2 (Hard) · 3 (Good) · 4 (Easy)
-            </span>
-          </div>
+        <Card className="mb-6 shadow-sm border bg-card/60 backdrop-blur animate-in fade-in">
+          <CardContent className="p-4 sm:p-5 text-center">
+            <div className="flex justify-between items-center mb-3 flex-wrap gap-2">
+              <span className="text-sm font-semibold text-foreground">
+                Rate Recall Difficulty
+              </span>
+              <span className="text-xs text-muted-foreground">
+                Hotkeys: 1 (Again) · 2 (Hard) · 3 (Good) · 4 (Easy)
+              </span>
+            </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(110px, 1fr))', gap: '10px' }}>
-            <button className="btn btn-secondary btn-sm" onClick={() => handleRating('again')} style={{ border: '1px solid var(--accent-rose)', color: 'var(--accent-rose)' }}>
-              1 · Again
-            </button>
-            <button className="btn btn-secondary btn-sm" onClick={() => handleRating('hard')} style={{ border: '1px solid var(--accent-amber)', color: 'var(--accent-amber)' }}>
-              2 · Hard
-            </button>
-            <button className="btn btn-secondary btn-sm" onClick={() => handleRating('good')} style={{ border: '1px solid var(--accent-blue)', color: 'var(--accent-blue)' }}>
-              3 · Good
-            </button>
-            <button className="btn btn-secondary btn-sm" onClick={() => handleRating('easy')} style={{ border: '1px solid var(--accent-emerald)', color: '#3fb950' }}>
-              4 · Easy
-            </button>
-          </div>
-        </div>
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={() => handleRating('again')} 
+                className="border-rose-500/40 text-rose-600 hover:bg-rose-500/10 dark:text-rose-400"
+              >
+                1 · Again
+              </Button>
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={() => handleRating('hard')} 
+                className="border-amber-500/40 text-amber-600 hover:bg-amber-500/10 dark:text-amber-400"
+              >
+                2 · Hard
+              </Button>
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={() => handleRating('good')} 
+                className="border-blue-500/40 text-blue-600 hover:bg-blue-500/10 dark:text-blue-400"
+              >
+                3 · Good
+              </Button>
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={() => handleRating('easy')} 
+                className="border-emerald-500/40 text-emerald-600 hover:bg-emerald-500/10 dark:text-emerald-400"
+              >
+                4 · Easy
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
       )}
 
       {/* Nav Controls */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '20px', flexWrap: 'wrap', gap: '12px' }}>
-        <button
-          className="btn btn-ghost btn-sm"
+      <div className="flex justify-between items-center flex-wrap gap-3">
+        <Button
+          variant="ghost"
+          size="sm"
           onClick={() => { setCardIndex(prev => Math.max(0, prev - 1)); setIsFlipped(false); }}
           disabled={cardIndex === 0}
+          className="gap-1.5"
         >
-          <ChevronLeft size={16} /> Previous Card
-        </button>
+          <ChevronLeft className="w-4 h-4" /> Previous Card
+        </Button>
 
-        <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
-          Press <kbd style={{ padding: '2px 6px', background: 'var(--bg-elevated)', borderRadius: '4px', border: '1px solid var(--border-subtle)', fontFamily: 'monospace' }}>Space</kbd> to flip
+        <span className="text-xs text-muted-foreground">
+          Press <kbd className="px-1.5 py-0.5 rounded bg-muted border font-mono text-[11px]">Space</kbd> to flip
         </span>
 
-        <button
-          className="btn btn-ghost btn-sm"
+        <Button
+          variant="ghost"
+          size="sm"
           onClick={() => { setCardIndex(prev => Math.min(activeSet.questions.length - 1, prev + 1)); setIsFlipped(false); }}
           disabled={cardIndex === activeSet.questions.length - 1}
+          className="gap-1.5"
         >
-          Next Card <ChevronRight size={16} />
-        </button>
+          Next Card <ChevronRight className="w-4 h-4" />
+        </Button>
       </div>
     </div>
   );

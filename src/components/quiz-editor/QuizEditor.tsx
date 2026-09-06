@@ -3,6 +3,10 @@ import { useQuiz } from '../../context/QuizContext';
 import type { Question, QuestionType } from '../../types/quiz';
 import { BulkImportModal } from './BulkImportModal';
 import { ArrowLeft, Save, Plus, Trash2, Upload, Edit3, Check, X } from 'lucide-react';
+import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
+import { Button } from '../ui/button';
+import { Badge } from '../ui/badge';
+import { Input } from '../ui/input';
 
 export const QuizEditor: React.FC = () => {
   const { editingSet, addQuizSet, updateQuizSet, setCurrentView } = useQuiz();
@@ -190,128 +194,128 @@ export const QuizEditor: React.FC = () => {
   };
 
   return (
-    <div style={{ padding: '0 24px 48px', maxWidth: '950px', margin: '0 auto' }}>
+    <div className="w-full max-w-5xl mx-auto px-4 py-8 space-y-6">
       {/* Top Header Controls */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', margin: '20px 0' }}>
-        <button className="btn btn-ghost" onClick={() => setCurrentView('dashboard')}>
-          <ArrowLeft size={16} /> Back to Dashboard
-        </button>
+      <div className="flex flex-wrap items-center justify-between gap-4">
+        <Button variant="ghost" onClick={() => setCurrentView('dashboard')} className="gap-2">
+          <ArrowLeft className="h-4 w-4" /> Back to Dashboard
+        </Button>
 
-        <div style={{ display: 'flex', gap: '8px' }}>
-          <button className="btn btn-secondary" onClick={() => setShowBulkImport(true)}>
-            <Upload size={15} /> Bulk Import
-          </button>
-          <button className="btn btn-primary" onClick={handleSaveSet}>
-            <Save size={16} /> Save Quiz Set
-          </button>
+        <div className="flex items-center gap-2.5">
+          <Button variant="secondary" onClick={() => setShowBulkImport(true)} className="gap-2">
+            <Upload className="h-4 w-4" /> Bulk Import
+          </Button>
+          <Button onClick={handleSaveSet} className="gap-2">
+            <Save className="h-4 w-4" /> Save Quiz Set
+          </Button>
         </div>
       </div>
 
-      {/* Quiz Set Details Panel */}
-      <div className="panel" style={{ padding: '24px', marginBottom: '24px' }}>
-        <h2 style={{ fontSize: '1.2rem', marginBottom: '16px', color: 'var(--text-primary)' }}>
-          {editingSet ? 'Edit Quiz Set Details' : 'Create New Quiz Set'}
-        </h2>
+      {/* Quiz Set Details Card */}
+      <Card className="shadow-xs border-border/80">
+        <CardHeader className="px-6 pt-6 pb-4">
+          <CardTitle className="text-xl font-bold tracking-tight">
+            {editingSet ? 'Edit Quiz Set Details' : 'Create New Quiz Set'}
+          </CardTitle>
+        </CardHeader>
 
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: '16px' }}>
-          <div>
-            <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 600, marginBottom: '6px', color: 'var(--text-secondary)' }}>Quiz Title *</label>
-            <input 
-              type="text" 
-              className="input-field" 
-              placeholder="e.g. AWS Solutions Architect Practice" 
-              value={title}
-              onChange={e => setTitle(e.target.value)}
-            />
+        <CardContent className="px-6 pb-6 space-y-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div className="space-y-1.5">
+              <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Quiz Title *</label>
+              <Input 
+                type="text" 
+                placeholder="e.g. AWS Solutions Architect Practice" 
+                value={title}
+                onChange={e => setTitle(e.target.value)}
+              />
+            </div>
+
+            <div className="space-y-1.5">
+              <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Category</label>
+              <Input 
+                type="text" 
+                placeholder="e.g. Cloud Computing, Science" 
+                value={category}
+                onChange={e => setCategory(e.target.value)}
+              />
+            </div>
+
+            <div className="space-y-1.5">
+              <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Tags (comma separated)</label>
+              <Input 
+                type="text" 
+                placeholder="e.g. AWS, Cloud, Exam" 
+                value={tags}
+                onChange={e => setTags(e.target.value)}
+              />
+            </div>
+
+            <div className="space-y-1.5">
+              <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Exam Time Limit (Mins)</label>
+              <Input 
+                type="number" 
+                placeholder="10" 
+                value={timeLimitMinutes}
+                onChange={e => setTimeLimitMinutes(Number(e.target.value))}
+              />
+            </div>
           </div>
 
-          <div>
-            <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 600, marginBottom: '6px', color: 'var(--text-secondary)' }}>Category</label>
-            <input 
-              type="text" 
-              className="input-field" 
-              placeholder="e.g. Cloud Computing, Science, History" 
-              value={category}
-              onChange={e => setCategory(e.target.value)}
+          <div className="space-y-1.5">
+            <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Description</label>
+            <textarea 
+              className="flex min-h-[70px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm shadow-xs placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50" 
+              rows={2} 
+              placeholder="Overview of what this quiz set covers..." 
+              value={description}
+              onChange={e => setDescription(e.target.value)}
             />
           </div>
-
-          <div>
-            <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 600, marginBottom: '6px', color: 'var(--text-secondary)' }}>Tags (comma separated)</label>
-            <input 
-              type="text" 
-              className="input-field" 
-              placeholder="e.g. AWS, Cloud, Exam" 
-              value={tags}
-              onChange={e => setTags(e.target.value)}
-            />
-          </div>
-
-          <div>
-            <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 600, marginBottom: '6px', color: 'var(--text-secondary)' }}>Exam Time Limit (Minutes)</label>
-            <input 
-              type="number" 
-              className="input-field" 
-              placeholder="10" 
-              value={timeLimitMinutes}
-              onChange={e => setTimeLimitMinutes(Number(e.target.value))}
-            />
-          </div>
-        </div>
-
-        <div style={{ marginTop: '14px' }}>
-          <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 600, marginBottom: '6px', color: 'var(--text-secondary)' }}>Description</label>
-          <textarea 
-            className="input-field" 
-            rows={2} 
-            placeholder="Overview of what this quiz set covers..." 
-            value={description}
-            onChange={e => setDescription(e.target.value)}
-          />
-        </div>
-      </div>
+        </CardContent>
+      </Card>
 
       {/* Questions List with Inline Editing */}
-      <div style={{ marginBottom: '24px' }}>
-        <h3 style={{ fontSize: '1.1rem', marginBottom: '14px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-          Questions ({questions.length})
+      <div className="space-y-4">
+        <h3 className="text-lg font-bold tracking-tight text-foreground flex items-center gap-2">
+          Questions <Badge variant="secondary">{questions.length}</Badge>
         </h3>
 
         {questions.map((q, idx) => (
-          <div key={q.id} className="panel" style={{ padding: '18px', marginBottom: '12px' }}>
+          <Card key={q.id} className="p-5 shadow-xs border-border/70">
             {editingQId === q.id ? (
               /* Inline Question Edit Form */
-              <div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
-                  <span className="badge badge-blue">Editing Question {idx + 1}</span>
-                  <div style={{ display: 'flex', gap: '6px' }}>
-                    <button className="btn btn-secondary btn-sm" onClick={() => setEditingQId(null)}>
-                      <X size={14} /> Cancel
-                    </button>
-                    <button className="btn btn-primary btn-sm" onClick={saveEditedQuestion}>
-                      <Check size={14} /> Save Question
-                    </button>
+              <div className="space-y-4">
+                <div className="flex items-center justify-between pb-2 border-b border-border">
+                  <Badge variant="blue">Editing Question {idx + 1}</Badge>
+                  <div className="flex gap-2">
+                    <Button variant="secondary" size="sm" onClick={() => setEditingQId(null)} className="h-8 gap-1">
+                      <X className="h-3.5 w-3.5" /> Cancel
+                    </Button>
+                    <Button size="sm" onClick={saveEditedQuestion} className="h-8 gap-1">
+                      <Check className="h-3.5 w-3.5" /> Save Question
+                    </Button>
                   </div>
                 </div>
 
-                <div style={{ marginBottom: '12px' }}>
-                  <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: 600, color: 'var(--text-secondary)', marginBottom: '4px' }}>Question Prompt</label>
-                  <input
+                <div className="space-y-1.5">
+                  <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Question Prompt</label>
+                  <Input
                     type="text"
-                    className="input-field"
                     value={editPrompt}
                     onChange={e => setEditPrompt(e.target.value)}
                   />
                 </div>
 
                 {(editType === 'single' || editType === 'multiple') && editOptions && (
-                  <div style={{ marginBottom: '12px' }}>
-                    <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: 600, color: 'var(--text-secondary)', marginBottom: '6px' }}>Options & Correct Answer Selection:</label>
+                  <div className="space-y-2">
+                    <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Options & Correct Answer Selection:</label>
                     {editOptions.map((opt, oIdx) => (
-                      <div key={oIdx} style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px' }}>
+                      <div key={oIdx} className="flex items-center gap-2.5">
                         <input
                           type={editType === 'single' ? 'radio' : 'checkbox'}
                           name="editCorrect"
+                          className="h-4 w-4 rounded border-border text-primary focus:ring-primary accent-primary cursor-pointer"
                           checked={editCorrectAnswers.includes(oIdx)}
                           onChange={() => {
                             if (editType === 'single') setEditCorrectAnswers([oIdx]);
@@ -324,9 +328,8 @@ export const QuizEditor: React.FC = () => {
                             }
                           }}
                         />
-                        <input
+                        <Input
                           type="text"
-                          className="input-field"
                           value={opt}
                           onChange={e => {
                             const updated = [...editOptions];
@@ -339,21 +342,19 @@ export const QuizEditor: React.FC = () => {
                   </div>
                 )}
 
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginTop: '12px' }}>
-                  <div>
-                    <label style={{ display: 'block', fontSize: '0.8rem', color: 'var(--text-secondary)', marginBottom: '4px' }}>Explanation</label>
-                    <input
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Explanation</label>
+                    <Input
                       type="text"
-                      className="input-field"
                       value={editExplanation}
                       onChange={e => setEditExplanation(e.target.value)}
                     />
                   </div>
-                  <div>
-                    <label style={{ display: 'block', fontSize: '0.8rem', color: 'var(--text-secondary)', marginBottom: '4px' }}>Hint</label>
-                    <input
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Hint</label>
+                    <Input
                       type="text"
-                      className="input-field"
                       value={editHint}
                       onChange={e => setEditHint(e.target.value)}
                     />
@@ -362,39 +363,36 @@ export const QuizEditor: React.FC = () => {
               </div>
             ) : (
               /* Question Summary View */
-              <div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '12px' }}>
-                  <div>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px' }}>
-                      <span className="badge badge-blue">Q{idx + 1} • {q.type.toUpperCase()}</span>
+              <div className="space-y-3">
+                <div className="flex items-start justify-between gap-4">
+                  <div className="space-y-1">
+                    <div className="flex items-center gap-2">
+                      <Badge variant="blue">Q{idx + 1} • {q.type.toUpperCase()}</Badge>
                     </div>
-                    <h4 style={{ fontSize: '0.95rem', fontWeight: 600 }}>{q.prompt}</h4>
+                    <h4 className="text-sm sm:text-base font-semibold text-foreground pt-1">{q.prompt}</h4>
                   </div>
-                  <div style={{ display: 'flex', gap: '4px' }}>
-                    <button className="btn btn-ghost btn-sm" onClick={() => startEditingQuestion(q)} title="Edit Question">
-                      <Edit3 size={15} color="var(--accent-blue)" />
-                    </button>
-                    <button className="btn btn-ghost btn-sm" onClick={() => handleDeleteQuestion(q.id)} title="Delete Question">
-                      <Trash2 size={15} color="var(--accent-rose)" />
-                    </button>
+                  <div className="flex items-center gap-1 shrink-0">
+                    <Button variant="ghost" size="icon" onClick={() => startEditingQuestion(q)} title="Edit Question" className="h-8 w-8 text-blue-500 hover:text-blue-600">
+                      <Edit3 className="h-4 w-4" />
+                    </Button>
+                    <Button variant="ghost" size="icon" onClick={() => handleDeleteQuestion(q.id)} title="Delete Question" className="h-8 w-8 text-destructive hover:text-destructive">
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
                   </div>
                 </div>
 
                 {q.options && (
-                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginTop: '10px' }}>
+                  <div className="flex flex-wrap gap-2 pt-1">
                     {q.options.map((opt, oIdx) => {
                       const isCorrect = q.correctAnswers.includes(oIdx);
                       return (
                         <span 
                           key={oIdx} 
-                          style={{
-                            padding: '3px 10px',
-                            borderRadius: 'var(--radius-sm)',
-                            fontSize: '0.8rem',
-                            background: isCorrect ? 'rgba(46, 160, 67, 0.12)' : 'var(--bg-input)',
-                            color: isCorrect ? '#3fb950' : 'var(--text-secondary)',
-                            border: isCorrect ? '1px solid rgba(46, 160, 67, 0.3)' : '1px solid var(--border-subtle)',
-                          }}
+                          className={`text-xs px-2.5 py-1 rounded-md border font-medium ${
+                            isCorrect 
+                              ? 'bg-emerald-500/10 text-emerald-500 border-emerald-500/30 font-semibold' 
+                              : 'bg-muted/40 text-muted-foreground border-border'
+                          }`}
                         >
                           {String.fromCharCode(65 + oIdx)}. {opt}
                         </span>
@@ -404,27 +402,28 @@ export const QuizEditor: React.FC = () => {
                 )}
 
                 {q.explanation && (
-                  <p style={{ marginTop: '8px', fontSize: '0.8rem', color: 'var(--text-muted)' }}>
-                    Explanation: {q.explanation}
+                  <p className="text-xs text-muted-foreground pt-1 italic">
+                    <span className="font-semibold text-foreground not-italic">Explanation:</span> {q.explanation}
                   </p>
                 )}
               </div>
             )}
-          </div>
+          </Card>
         ))}
       </div>
 
       {/* Add Question Form */}
-      <div className="panel" style={{ padding: '24px' }}>
-        <h3 style={{ fontSize: '1.1rem', marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '6px' }}>
-          <Plus size={18} color="var(--accent-blue)" /> Add Question
+      <Card className="p-6 shadow-xs border-border/80 space-y-5">
+        <h3 className="text-lg font-bold tracking-tight text-foreground flex items-center gap-2">
+          <Plus className="h-5 w-5 text-primary" /> Add Question
         </h3>
 
-        <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap', marginBottom: '16px' }}>
+        <div className="flex gap-2 flex-wrap">
           {(['single', 'multiple', 'true-false', 'fill-blank', 'flashcard'] as QuestionType[]).map(t => (
-            <button
+            <Button
               key={t}
-              className={`btn btn-sm ${newType === t ? 'btn-primary' : 'btn-secondary'}`}
+              variant={newType === t ? 'default' : 'secondary'}
+              size="sm"
               onClick={() => setNewType(t)}
             >
               {t === 'single' && 'Single Choice'}
@@ -432,15 +431,14 @@ export const QuizEditor: React.FC = () => {
               {t === 'true-false' && 'True / False'}
               {t === 'fill-blank' && 'Fill in Blank'}
               {t === 'flashcard' && '3D Flashcard'}
-            </button>
+            </Button>
           ))}
         </div>
 
-        <div style={{ marginBottom: '16px' }}>
-          <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 600, marginBottom: '6px', color: 'var(--text-secondary)' }}>Question Prompt *</label>
-          <input
+        <div className="space-y-1.5">
+          <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Question Prompt *</label>
+          <Input
             type="text"
-            className="input-field"
             placeholder="Type question prompt..."
             value={newPrompt}
             onChange={e => setNewPrompt(e.target.value)}
@@ -448,65 +446,66 @@ export const QuizEditor: React.FC = () => {
         </div>
 
         {(newType === 'single' || newType === 'multiple') && (
-          <div style={{ marginBottom: '16px' }}>
-            <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 600, marginBottom: '6px', color: 'var(--text-secondary)' }}>
+          <div className="space-y-2.5">
+            <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
               Options (Select radio/checkbox for correct answer):
             </label>
             {newOptions.map((opt, idx) => (
-              <div key={idx} style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '8px' }}>
+              <div key={idx} className="flex items-center gap-2.5">
                 <input
                   type={newType === 'single' ? 'radio' : 'checkbox'}
                   name="correctOpt"
+                  className="h-4 w-4 rounded border-border text-primary focus:ring-primary accent-primary cursor-pointer"
                   checked={newCorrectIndices.includes(idx)}
                   onChange={() => toggleCorrectIndex(idx)}
                 />
-                <input
+                <Input
                   type="text"
-                  className="input-field"
                   value={opt}
                   onChange={e => handleOptionChange(idx, e.target.value)}
                 />
                 {newOptions.length > 2 && (
-                  <button className="btn btn-ghost btn-sm" onClick={() => removeOptionField(idx)}>
-                    <Trash2 size={15} color="var(--accent-rose)" />
-                  </button>
+                  <Button variant="ghost" size="icon" onClick={() => removeOptionField(idx)} className="h-9 w-9 text-destructive shrink-0">
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
                 )}
               </div>
             ))}
             {newOptions.length < 6 && (
-              <button className="btn btn-ghost btn-sm" onClick={addOptionField} style={{ color: 'var(--accent-blue)' }}>
-                + Add Option Field
-              </button>
+              <Button variant="outline" size="sm" onClick={addOptionField} className="gap-1.5 text-xs">
+                <Plus className="h-3.5 w-3.5" /> Add Option Field
+              </Button>
             )}
           </div>
         )}
 
         {newType === 'true-false' && (
-          <div style={{ marginBottom: '16px' }}>
-            <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 600, marginBottom: '6px', color: 'var(--text-secondary)' }}>Correct Answer:</label>
-            <div style={{ display: 'flex', gap: '8px' }}>
-              <button
-                className={`btn btn-sm ${newTrueFalseAns === 'true' ? 'btn-primary' : 'btn-secondary'}`}
+          <div className="space-y-2">
+            <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Correct Answer:</label>
+            <div className="flex gap-2">
+              <Button
+                variant={newTrueFalseAns === 'true' ? 'default' : 'secondary'}
+                size="sm"
                 onClick={() => setNewTrueFalseAns('true')}
               >
                 True
-              </button>
-              <button
-                className={`btn btn-sm ${newTrueFalseAns === 'false' ? 'btn-primary' : 'btn-secondary'}`}
+              </Button>
+              <Button
+                variant={newTrueFalseAns === 'false' ? 'default' : 'secondary'}
+                size="sm"
                 onClick={() => setNewTrueFalseAns('false')}
               >
                 False
-              </button>
+              </Button>
             </div>
           </div>
         )}
 
         {newType === 'fill-blank' && (
-          <div style={{ marginBottom: '16px' }}>
-            <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 600, marginBottom: '6px', color: 'var(--text-secondary)' }}>Correct Answer Text</label>
-            <input
+          <div className="space-y-1.5">
+            <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Correct Answer Text</label>
+            <Input
               type="text"
-              className="input-field"
               placeholder="e.g. Amazon Web Services"
               value={newFillBlankAns}
               onChange={e => setNewFillBlankAns(e.target.value)}
@@ -515,10 +514,10 @@ export const QuizEditor: React.FC = () => {
         )}
 
         {newType === 'flashcard' && (
-          <div style={{ marginBottom: '16px' }}>
-            <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 600, marginBottom: '6px', color: 'var(--text-secondary)' }}>Flashcard Back (Answer & Key Notes)</label>
+          <div className="space-y-1.5">
+            <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Flashcard Back (Answer & Key Notes)</label>
             <textarea
-              className="input-field"
+              className="flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm shadow-xs placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
               rows={3}
               placeholder="Answer shown on reverse card flip..."
               value={newFlashcardAns}
@@ -527,22 +526,20 @@ export const QuizEditor: React.FC = () => {
           </div>
         )}
 
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '14px', marginBottom: '16px' }}>
-          <div>
-            <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 600, marginBottom: '4px', color: 'var(--text-secondary)' }}>Explanation (Optional)</label>
-            <input
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div className="space-y-1.5">
+            <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Explanation (Optional)</label>
+            <Input
               type="text"
-              className="input-field"
               placeholder="Explanation for correct answer..."
               value={newExplanation}
               onChange={e => setNewExplanation(e.target.value)}
             />
           </div>
-          <div>
-            <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 600, marginBottom: '4px', color: 'var(--text-secondary)' }}>Hint (Optional)</label>
-            <input
+          <div className="space-y-1.5">
+            <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Hint (Optional)</label>
+            <Input
               type="text"
-              className="input-field"
               placeholder="Hint provided during practice..."
               value={newHint}
               onChange={e => setNewHint(e.target.value)}
@@ -550,10 +547,10 @@ export const QuizEditor: React.FC = () => {
           </div>
         </div>
 
-        <button className="btn btn-primary" onClick={handleAddQuestion} style={{ width: '100%' }}>
-          <Plus size={16} /> Add Question to Set
-        </button>
-      </div>
+        <Button onClick={handleAddQuestion} className="w-full gap-2 font-semibold">
+          <Plus className="h-4 w-4" /> Add Question to Set
+        </Button>
+      </Card>
 
       {showBulkImport && (
         <BulkImportModal
@@ -564,3 +561,4 @@ export const QuizEditor: React.FC = () => {
     </div>
   );
 };
+
