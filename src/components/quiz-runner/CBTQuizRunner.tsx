@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useQuiz } from '@/context/QuizContext';
-import type { QuizAttempt, UserAnswer } from '@/types/quiz';
+import type { QuizAttempt, UserAnswer, QuizSet } from '@/types/quiz';
 import { QuizResultModal } from './QuizResultModal';
 import { soundFx } from '@/utils/sound';
 import { Card, CardHeader, CardContent, CardFooter } from '@/components/ui/card';
@@ -10,7 +10,7 @@ import { Input } from '@/components/ui/input';
 import { ArrowLeft, Clock, Flag, Check, ChevronLeft, ChevronRight, Grid, Volume2, AlertCircle } from 'lucide-react';
 
 export const CBTQuizRunner: React.FC = () => {
-  const { activeSet, runnerMode, saveAttempt, setCurrentView, activeSession, saveActiveSession, clearActiveSession } = useQuiz();
+  const { activeSet, runnerMode, saveAttempt, setCurrentView, activeSession, saveActiveSession, clearActiveSession, startConfiguredQuiz } = useQuiz();
 
   if (!activeSet) {
     return (
@@ -176,6 +176,8 @@ export const CBTQuizRunner: React.FC = () => {
     const percentage = totalPoints > 0 ? Math.round((score / totalPoints) * 100) : 0;
     const timeSpentSeconds = timeLimitSeconds - secondsRemaining;
 
+    const passingThreshold = activeSet.passingPercentage ?? 70;
+
     const attempt: QuizAttempt = {
       id: `att_${Date.now()}`,
       quizSetId: activeSet.id,
@@ -185,6 +187,7 @@ export const CBTQuizRunner: React.FC = () => {
       score,
       totalPoints,
       percentage,
+      passingPercentage: passingThreshold,
       timeSpentSeconds: runnerMode === 'exam' ? timeSpentSeconds : 0,
       answers: userAnswers,
       missedQuestionIds: missedIds
@@ -209,10 +212,32 @@ export const CBTQuizRunner: React.FC = () => {
         attempt={finalAttempt}
         onRetake={() => {
           setIsFinished(false);
+          setFinalAttempt(null);
           setCurrentIndex(0);
           setUserAnswers({});
           setFlaggedIds(new Set());
           setSecondsRemaining(timeLimitSeconds);
+        }}
+        onRetakeWrong={() => {
+          const wrongQuestions = activeSet.questions.filter(q => finalAttempt.missedQuestionIds.includes(q.id));
+          if (wrongQuestions.length === 0) return;
+
+          const retakeSet: QuizSet = {
+            ...activeSet,
+            id: `${activeSet.id}_retake_${Date.now()}`,
+            title: `${activeSet.title} (Retake - ${wrongQuestions.length} Missed)`,
+            questions: wrongQuestions,
+            timeLimitMinutes: Math.max(1, Math.ceil(wrongQuestions.length * 1.2)),
+            passingPercentage: activeSet.passingPercentage ?? 70,
+          };
+
+          setIsFinished(false);
+          setFinalAttempt(null);
+          setCurrentIndex(0);
+          setUserAnswers({});
+          setFlaggedIds(new Set());
+          setSecondsRemaining((retakeSet.timeLimitMinutes || 5) * 60);
+          startConfiguredQuiz(retakeSet, runnerMode);
         }}
       />
     );

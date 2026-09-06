@@ -12,13 +12,15 @@ interface Props {
   quizSet: QuizSet;
   attempt: QuizAttempt;
   onRetake: () => void;
+  onRetakeWrong?: () => void;
 }
 
-export const QuizResultModal: React.FC<Props> = ({ quizSet, attempt, onRetake }) => {
+export const QuizResultModal: React.FC<Props> = ({ quizSet, attempt, onRetake, onRetakeWrong }) => {
   const { setCurrentView } = useQuiz();
   const [filterMissed, setFilterMissed] = useState(false);
 
-  const isPassed = attempt.percentage >= 70;
+  const passingThreshold = attempt.passingPercentage ?? quizSet.passingPercentage ?? 70;
+  const isPassed = attempt.percentage >= passingThreshold;
 
   useEffect(() => {
     if (isPassed) {
@@ -54,7 +56,9 @@ export const QuizResultModal: React.FC<Props> = ({ quizSet, attempt, onRetake })
             {isPassed ? 'Test Passed' : 'Test Completed'}
           </h2>
           <p className="text-sm text-muted-foreground mb-6">
-            {isPassed ? 'You reached the 70% passing threshold.' : 'Score was below 70%. Review missed items below.'}
+            {isPassed 
+              ? `You reached the ${passingThreshold}% passing threshold.` 
+              : `Score was below the ${passingThreshold}% passing threshold. Review missed items below.`}
           </p>
 
           <div className="flex justify-center items-center gap-4 flex-wrap mb-6">
@@ -77,8 +81,16 @@ export const QuizResultModal: React.FC<Props> = ({ quizSet, attempt, onRetake })
           </div>
 
           <div className="flex justify-center gap-3 flex-wrap">
-            <Button onClick={onRetake} className="gap-2">
-              <RefreshCw className="w-4 h-4" /> Retake Test
+            {onRetakeWrong && attempt.missedQuestionIds.length > 0 && (
+              <Button 
+                onClick={onRetakeWrong} 
+                className="gap-2 bg-amber-600 hover:bg-amber-700 dark:bg-amber-600 dark:hover:bg-amber-500 text-white font-semibold shadow-xs"
+              >
+                <AlertTriangle className="w-4 h-4" /> Retake Wrong Answers ({attempt.missedQuestionIds.length})
+              </Button>
+            )}
+            <Button onClick={onRetake} variant="outline" className="gap-2">
+              <RefreshCw className="w-4 h-4" /> Retake Entire Test
             </Button>
             <Button variant="outline" onClick={() => setCurrentView('dashboard')} className="gap-2">
               <Home className="w-4 h-4" /> Dashboard

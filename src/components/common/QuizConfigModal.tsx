@@ -4,7 +4,7 @@ import { Dialog, DialogHeader, DialogTitle, DialogDescription, DialogFooter } fr
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
-import { Play, Layers, Shuffle, Clock } from 'lucide-react';
+import { Play, Layers, Shuffle, Clock, Award } from 'lucide-react';
 
 interface Props {
   quizSet: QuizSet;
@@ -20,6 +20,7 @@ export const QuizConfigModal: React.FC<Props> = ({ quizSet, mode, onClose, onSta
   const [startRange, setStartRange] = useState<number>(1);
   const [randomize, setRandomize] = useState<boolean>(false);
   const [customTime, setCustomTime] = useState<number>(Math.min(50, Math.ceil(Math.min(50, totalQuestions) * 1.2)));
+  const [passingScore, setPassingScore] = useState<number>(quizSet.passingPercentage || 70);
 
   const presets = [];
   if (totalQuestions > 50) {
@@ -52,6 +53,7 @@ export const QuizConfigModal: React.FC<Props> = ({ quizSet, mode, onClose, onSta
       ...quizSet,
       title: `${quizSet.title} (${slicedQuestions.length} Questions)`,
       timeLimitMinutes: customTime,
+      passingPercentage: passingScore,
       questions: slicedQuestions
     };
 
@@ -162,16 +164,57 @@ export const QuizConfigModal: React.FC<Props> = ({ quizSet, mode, onClose, onSta
         </div>
 
         {mode === 'exam' && (
-          <div>
-            <label className="text-xs font-semibold text-muted-foreground mb-1.5 flex items-center gap-1.5">
-              <Clock className="w-3.5 h-3.5" /> Exam Timer (Minutes):
-            </label>
-            <Input
-              type="number"
-              min={1}
-              value={customTime}
-              onChange={e => setCustomTime(Number(e.target.value))}
-            />
+          <div className="space-y-4 pt-1">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label className="text-xs font-semibold text-muted-foreground mb-1.5 flex items-center gap-1.5">
+                  <Clock className="w-3.5 h-3.5" /> Exam Timer (Minutes):
+                </label>
+                <Input
+                  type="number"
+                  min={1}
+                  value={customTime}
+                  onChange={e => setCustomTime(Math.max(1, Number(e.target.value)))}
+                />
+              </div>
+
+              <div>
+                <label className="text-xs font-semibold text-muted-foreground mb-1.5 flex items-center justify-between">
+                  <span className="flex items-center gap-1.5">
+                    <Award className="w-3.5 h-3.5 text-amber-500" /> Passing Score (%):
+                  </span>
+                  <span className="text-primary font-bold text-xs">{passingScore}%</span>
+                </label>
+                <Input
+                  type="number"
+                  min={1}
+                  max={100}
+                  value={passingScore}
+                  onChange={e => setPassingScore(Math.max(1, Math.min(100, Number(e.target.value))))}
+                  placeholder="70"
+                />
+              </div>
+            </div>
+
+            <div>
+              <label className="text-xs font-semibold text-muted-foreground mb-1.5 block">
+                Passing Score Presets:
+              </label>
+              <div className="flex gap-2">
+                {[60, 70, 75, 80, 85].map(score => (
+                  <Button
+                    key={score}
+                    type="button"
+                    variant={passingScore === score ? 'default' : 'outline'}
+                    size="sm"
+                    className="flex-1 text-xs h-8"
+                    onClick={() => setPassingScore(score)}
+                  >
+                    {score}%
+                  </Button>
+                ))}
+              </div>
+            </div>
           </div>
         )}
       </div>

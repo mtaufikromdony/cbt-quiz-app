@@ -215,6 +215,7 @@ export const QuizProvider: React.FC<{ children: React.ReactNode }> = ({ children
       userAnswers: {},
       flaggedIds: [],
       secondsRemaining: (configuredSet.timeLimitMinutes || 10) * 60,
+      passingPercentage: configuredSet.passingPercentage ?? 70,
       lastUpdated: Date.now(),
     };
     saveActiveSession(newSession);

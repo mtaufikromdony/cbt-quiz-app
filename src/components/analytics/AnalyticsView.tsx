@@ -114,7 +114,8 @@ export const AnalyticsView: React.FC = () => {
                 </thead>
                 <tbody className="divide-y divide-border">
                   {attempts.map(att => {
-                    const isPass = att.percentage >= 70;
+                    const passThreshold = att.passingPercentage ?? 70;
+                    const isPass = att.percentage >= passThreshold;
                     return (
                       <tr key={att.id} className="hover:bg-muted/30 transition-colors">
                         <td className="px-4 py-3.5 font-medium text-foreground">{att.quizTitle}</td>

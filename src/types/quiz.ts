@@ -22,6 +22,7 @@ export interface QuizSet {
   createdAt: string;
   updatedAt: string;
   timeLimitMinutes?: number; // Optional timer for CBT exam mode
+  passingPercentage?: number; // Custom passing score threshold (e.g. 70%)
   questions: Question[];
 }
 
@@ -42,6 +43,7 @@ export interface QuizAttempt {
   score: number;
   totalPoints: number;
   percentage: number;
+  passingPercentage?: number;
   timeSpentSeconds: number;
   answers: Record<string, UserAnswer>;
   missedQuestionIds: string[];
@@ -64,6 +66,7 @@ export interface ActiveSession {
   userAnswers: Record<string, UserAnswer>;
   flaggedIds: string[];
   secondsRemaining?: number;
+  passingPercentage?: number;
   lastUpdated: number;
 }
 
