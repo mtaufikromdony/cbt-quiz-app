@@ -1,18 +1,20 @@
 # CBT Quiz App
 
-Offline-first Computer-Based Testing (CBT) and active recall learning web application. Built with React 19, Vite, TypeScript, and Vanilla CSS.
+Offline-first Computer-Based Testing (CBT) and active recall learning web application. Built with React 19, Vite, TypeScript, Tailwind CSS v4, and [shadcn/ui](https://ui.shadcn.com/) components.
 
 ---
 
 ## Core Features
 
-- **CBT Exam Mode**: Timed exam interface with countdown clock, question palette, question flagging for review, and score reporting.
+- **Local Session Auto-Save & Sleep Recovery**: Never lose progress during a test. Answers, flagged items, question index, and timers are automatically persisted in `localStorage`. Automatically recovers when your device wakes up from sleep or the browser refreshes, with a prominent Resume banner on the dashboard.
+- **CBT Exam Mode**: Timed exam interface with high-contrast countdown clock, question palette, question flagging for review, and score reporting.
 - **Practice Mode**: Step-by-step practice with instant answer checking, hints, and explanations.
 - **3D Flashcards**: Flip card interface with Leitner difficulty ratings (Again, Hard, Good, Easy) and text-to-speech audio reader.
 - **Custom Session Setup**: Flexible batch launcher. Practice full question banks or split questions into custom subsets (e.g. 10, 25, 50, 100 questions, or custom ranges).
+- **Dark & Light Mode**: Accessible, high-contrast themes optimized for study, with clear visibility for timers, badges, and answer options.
 - **Bulk Import & Export**: Import questions from JSON, CSV, or formatted plain text. Export any quiz set to JSON or CSV for backup.
 - **Analytics & History**: Track average scores, pass rates, study days, and generate review tests from previously missed questions.
-- **Offline Storage**: All quiz data, attempts, and custom sets persist in browser local storage.
+- **Offline Storage**: All quiz data, active sessions, attempts, and custom sets persist locally in your browser.
 
 ---
 
