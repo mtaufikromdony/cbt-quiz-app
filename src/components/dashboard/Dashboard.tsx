@@ -11,7 +11,17 @@ import { Input } from '@/components/ui/input';
 import { Play, BookOpen, Edit, Trash2, Download, Search, Plus, Upload, Clock, FileSpreadsheet, Layers, CheckCircle2 } from 'lucide-react';
 
 export const Dashboard: React.FC = () => {
-  const { quizSets, startConfiguredQuiz, startConfiguredFlashcard, openEditor, deleteQuizSet, getStats } = useQuiz();
+  const { 
+    quizSets, 
+    startConfiguredQuiz, 
+    startConfiguredFlashcard, 
+    openEditor, 
+    deleteQuizSet, 
+    getStats,
+    activeSession,
+    resumeActiveSession,
+    clearActiveSession
+  } = useQuiz();
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string>('All');
   const [showBulkImportModal, setShowBulkImportModal] = useState(false);
@@ -41,7 +51,7 @@ export const Dashboard: React.FC = () => {
   return (
     <div className="max-w-7xl mx-auto px-4 pb-16">
       {/* Header Banner Card */}
-      <Card className="mb-8 border bg-card/60 backdrop-blur shadow-sm">
+      <Card className="mb-6 border bg-card/60 backdrop-blur shadow-sm">
         <CardContent className="p-6">
           <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
             <div>
@@ -66,6 +76,59 @@ export const Dashboard: React.FC = () => {
           </div>
         </CardContent>
       </Card>
+
+      {/* In-Progress Session Resume Banner */}
+      {activeSession && (
+        <Card className="mb-6 border-blue-500/40 bg-blue-500/5 dark:bg-blue-950/20 shadow-sm animate-in fade-in">
+          <CardContent className="p-4 sm:p-5">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              <div className="flex items-start sm:items-center gap-3.5">
+                <div className="p-2.5 rounded-xl bg-blue-500/15 text-blue-600 dark:text-blue-400 shrink-0">
+                  <Play className="h-5 w-5 fill-current" />
+                </div>
+                <div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs font-bold uppercase tracking-wider text-blue-600 dark:text-blue-400">
+                      In-Progress Session
+                    </span>
+                    <Badge variant={activeSession.runnerMode === 'exam' ? 'destructive' : 'blue'} className="text-[10px] uppercase">
+                      {activeSession.runnerMode}
+                    </Badge>
+                  </div>
+                  <h4 className="text-sm sm:text-base font-semibold text-foreground mt-0.5">
+                    {activeSession.activeSet.title}
+                  </h4>
+                  <p className="text-xs text-muted-foreground mt-0.5">
+                    {activeSession.type === 'flashcard' ? (
+                      `Card ${activeSession.currentIndex + 1} of ${activeSession.activeSet.questions.length}`
+                    ) : (
+                      `Progress: ${Object.keys(activeSession.userAnswers).length} answered of ${activeSession.activeSet.questions.length} • Currently on Question ${activeSession.currentIndex + 1}`
+                    )}
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-2 self-end sm:self-center shrink-0">
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  onClick={clearActiveSession} 
+                  className="text-xs text-muted-foreground hover:text-destructive h-8"
+                >
+                  Discard
+                </Button>
+                <Button 
+                  size="sm" 
+                  onClick={resumeActiveSession} 
+                  className="gap-1.5 text-xs font-semibold h-8"
+                >
+                  <Play className="h-3.5 w-3.5 fill-current" /> Resume Session
+                </Button>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Controls Bar */}
       <div className="flex flex-col sm:flex-row justify-between items-stretch sm:items-center gap-3 mb-6">

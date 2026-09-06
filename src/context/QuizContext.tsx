@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { defaultQuizSets } from '../data/defaultQuizzes';
-import type { Question, QuizAttempt, QuizSet, QuizStats } from '../types/quiz';
+import type { Question, QuizAttempt, QuizSet, QuizStats, ActiveSession } from '../types/quiz';
 import { soundFx } from '../utils/sound';
 
 export type ViewMode = 'dashboard' | 'editor' | 'runner' | 'flashcard' | 'analytics';
@@ -13,6 +13,7 @@ interface QuizContextType {
   editingSet: QuizSet | null;
   runnerMode: 'exam' | 'practice';
   soundEnabled: boolean;
+  activeSession: ActiveSession | null;
   
   // Navigation & Actions
   setCurrentView: (view: ViewMode) => void;
@@ -21,6 +22,9 @@ interface QuizContextType {
   startFlashcard: (setId: string) => void;
   startConfiguredFlashcard: (configuredSet: QuizSet) => void;
   openEditor: (setId?: string) => void;
+  saveActiveSession: (session: ActiveSession) => void;
+  clearActiveSession: () => void;
+  resumeActiveSession: () => void;
   
   // Quiz Sets & Questions CRUD
   addQuizSet: (set: Omit<QuizSet, 'id' | 'createdAt' | 'updatedAt'>) => QuizSet;
@@ -41,6 +45,7 @@ const QuizContext = createContext<QuizContextType | undefined>(undefined);
 const LOCAL_KEY_SETS = 'cbt_quiz_sets';
 const LOCAL_KEY_ATTEMPTS = 'cbt_quiz_attempts';
 const LOCAL_KEY_SOUND = 'cbt_quiz_sound';
+const LOCAL_KEY_ACTIVE_SESSION = 'cbt_active_session';
 
 export const QuizProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [quizSets, setQuizSets] = useState<QuizSet[]>(() => {
@@ -72,10 +77,66 @@ export const QuizProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return [];
   });
 
-  const [currentView, setCurrentView] = useState<ViewMode>('dashboard');
-  const [activeSetId, setActiveSetId] = useState<string | null>(null);
+  const [activeSession, setActiveSession] = useState<ActiveSession | null>(() => {
+    const saved = localStorage.getItem(LOCAL_KEY_ACTIVE_SESSION);
+    if (saved) {
+      try {
+        const parsed: ActiveSession = JSON.parse(saved);
+        if (parsed && parsed.activeSet && parsed.activeSet.questions?.length > 0) {
+          return parsed;
+        }
+      } catch {}
+    }
+    return null;
+  });
+
+  const [currentView, setCurrentView] = useState<ViewMode>(() => {
+    const saved = localStorage.getItem(LOCAL_KEY_ACTIVE_SESSION);
+    if (saved) {
+      try {
+        const parsed: ActiveSession = JSON.parse(saved);
+        if (parsed && parsed.activeSet && parsed.activeSet.questions?.length > 0) {
+          return parsed.type === 'flashcard' ? 'flashcard' : 'runner';
+        }
+      } catch {}
+    }
+    return 'dashboard';
+  });
+
+  const [activeCustomSet, setActiveCustomSet] = useState<QuizSet | null>(() => {
+    const saved = localStorage.getItem(LOCAL_KEY_ACTIVE_SESSION);
+    if (saved) {
+      try {
+        const parsed: ActiveSession = JSON.parse(saved);
+        if (parsed?.activeSet) return parsed.activeSet;
+      } catch {}
+    }
+    return null;
+  });
+
+  const [activeSetId, setActiveSetId] = useState<string | null>(() => {
+    const saved = localStorage.getItem(LOCAL_KEY_ACTIVE_SESSION);
+    if (saved) {
+      try {
+        const parsed: ActiveSession = JSON.parse(saved);
+        if (parsed?.activeSet?.id) return parsed.activeSet.id;
+      } catch {}
+    }
+    return null;
+  });
+
+  const [runnerMode, setRunnerMode] = useState<'exam' | 'practice'>(() => {
+    const saved = localStorage.getItem(LOCAL_KEY_ACTIVE_SESSION);
+    if (saved) {
+      try {
+        const parsed: ActiveSession = JSON.parse(saved);
+        if (parsed?.runnerMode) return parsed.runnerMode;
+      } catch {}
+    }
+    return 'exam';
+  });
+
   const [editingSetId, setEditingSetId] = useState<string | null>(null);
-  const [runnerMode, setRunnerMode] = useState<'exam' | 'practice'>('exam');
   const [soundEnabled, setSoundEnabled] = useState<boolean>(() => {
     const saved = localStorage.getItem(LOCAL_KEY_SOUND);
     return saved !== null ? JSON.parse(saved) : true;
@@ -94,16 +155,50 @@ export const QuizProvider: React.FC<{ children: React.ReactNode }> = ({ children
     soundFx.enabled = soundEnabled;
   }, [soundEnabled]);
 
-  const [activeCustomSet, setActiveCustomSet] = useState<QuizSet | null>(null);
+  const saveActiveSession = (session: ActiveSession) => {
+    setActiveSession(session);
+    try {
+      localStorage.setItem(LOCAL_KEY_ACTIVE_SESSION, JSON.stringify(session));
+    } catch (e) {
+      console.error('Failed to save session to localStorage', e);
+    }
+  };
+
+  const clearActiveSession = () => {
+    setActiveSession(null);
+    localStorage.removeItem(LOCAL_KEY_ACTIVE_SESSION);
+  };
+
+  const resumeActiveSession = () => {
+    if (!activeSession) return;
+    setActiveCustomSet(activeSession.activeSet);
+    setActiveSetId(activeSession.activeSet.id);
+    setRunnerMode(activeSession.runnerMode);
+    setCurrentView(activeSession.type === 'flashcard' ? 'flashcard' : 'runner');
+    soundFx.playClick();
+  };
 
   const activeSet = activeCustomSet || quizSets.find(s => s.id === activeSetId) || null;
   const editingSet = quizSets.find(s => s.id === editingSetId) || null;
 
   const startQuiz = (setId: string, mode: 'exam' | 'practice') => {
+    const targetSet = quizSets.find(s => s.id === setId);
+    if (!targetSet) return;
     setActiveCustomSet(null);
     setActiveSetId(setId);
     setRunnerMode(mode);
     setCurrentView('runner');
+    const newSession: ActiveSession = {
+      type: 'runner',
+      activeSet: targetSet,
+      runnerMode: mode,
+      currentIndex: 0,
+      userAnswers: {},
+      flaggedIds: [],
+      secondsRemaining: (targetSet.timeLimitMinutes || 10) * 60,
+      lastUpdated: Date.now(),
+    };
+    saveActiveSession(newSession);
     soundFx.playClick();
   };
 
@@ -112,13 +207,36 @@ export const QuizProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setActiveSetId(configuredSet.id);
     setRunnerMode(mode);
     setCurrentView('runner');
+    const newSession: ActiveSession = {
+      type: 'runner',
+      activeSet: configuredSet,
+      runnerMode: mode,
+      currentIndex: 0,
+      userAnswers: {},
+      flaggedIds: [],
+      secondsRemaining: (configuredSet.timeLimitMinutes || 10) * 60,
+      lastUpdated: Date.now(),
+    };
+    saveActiveSession(newSession);
     soundFx.playClick();
   };
 
   const startFlashcard = (setId: string) => {
+    const targetSet = quizSets.find(s => s.id === setId);
+    if (!targetSet) return;
     setActiveCustomSet(null);
     setActiveSetId(setId);
     setCurrentView('flashcard');
+    const newSession: ActiveSession = {
+      type: 'flashcard',
+      activeSet: targetSet,
+      runnerMode: 'practice',
+      currentIndex: 0,
+      userAnswers: {},
+      flaggedIds: [],
+      lastUpdated: Date.now(),
+    };
+    saveActiveSession(newSession);
     soundFx.playClick();
   };
 
@@ -126,6 +244,16 @@ export const QuizProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setActiveCustomSet(configuredSet);
     setActiveSetId(configuredSet.id);
     setCurrentView('flashcard');
+    const newSession: ActiveSession = {
+      type: 'flashcard',
+      activeSet: configuredSet,
+      runnerMode: 'practice',
+      currentIndex: 0,
+      userAnswers: {},
+      flaggedIds: [],
+      lastUpdated: Date.now(),
+    };
+    saveActiveSession(newSession);
     soundFx.playClick();
   };
 
@@ -274,12 +402,16 @@ export const QuizProvider: React.FC<{ children: React.ReactNode }> = ({ children
         editingSet,
         runnerMode,
         soundEnabled,
+        activeSession,
         setCurrentView,
         startQuiz,
         startConfiguredQuiz,
         startFlashcard,
         startConfiguredFlashcard,
         openEditor,
+        saveActiveSession,
+        clearActiveSession,
+        resumeActiveSession,
         addQuizSet,
         updateQuizSet,
         deleteQuizSet,

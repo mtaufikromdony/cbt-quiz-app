@@ -10,7 +10,7 @@ import { Input } from '@/components/ui/input';
 import { ArrowLeft, Clock, Flag, Check, ChevronLeft, ChevronRight, Grid, Volume2, AlertCircle } from 'lucide-react';
 
 export const CBTQuizRunner: React.FC = () => {
-  const { activeSet, runnerMode, saveAttempt, setCurrentView } = useQuiz();
+  const { activeSet, runnerMode, saveAttempt, setCurrentView, activeSession, saveActiveSession, clearActiveSession } = useQuiz();
 
   if (!activeSet) {
     return (
@@ -23,9 +23,11 @@ export const CBTQuizRunner: React.FC = () => {
     );
   }
 
-  const [currentIndex, setCurrentIndex] = useState(0);
-  const [userAnswers, setUserAnswers] = useState<Record<string, UserAnswer>>({});
-  const [flaggedIds, setFlaggedIds] = useState<Set<string>>(new Set());
+  const isResuming = activeSession && activeSession.activeSet.id === activeSet.id && activeSession.runnerMode === runnerMode;
+
+  const [currentIndex, setCurrentIndex] = useState(() => isResuming ? (activeSession?.currentIndex || 0) : 0);
+  const [userAnswers, setUserAnswers] = useState<Record<string, UserAnswer>>(() => isResuming ? (activeSession?.userAnswers || {}) : {});
+  const [flaggedIds, setFlaggedIds] = useState<Set<string>>(() => isResuming && activeSession?.flaggedIds ? new Set(activeSession.flaggedIds) : new Set());
   const [showHint, setShowHint] = useState(false);
   const [showNavGrid, setShowNavGrid] = useState(false);
   const [isFinished, setIsFinished] = useState(false);
@@ -34,7 +36,51 @@ export const CBTQuizRunner: React.FC = () => {
   const [practiceRevealed, setPracticeRevealed] = useState(false);
 
   const timeLimitSeconds = (activeSet.timeLimitMinutes || 10) * 60;
-  const [secondsRemaining, setSecondsRemaining] = useState(timeLimitSeconds);
+  const [secondsRemaining, setSecondsRemaining] = useState(() => {
+    if (isResuming && typeof activeSession?.secondsRemaining === 'number') {
+      return activeSession.secondsRemaining;
+    }
+    return timeLimitSeconds;
+  });
+
+  // Synchronize in-progress session to localStorage
+  useEffect(() => {
+    if (!activeSet || isFinished) return;
+    saveActiveSession({
+      type: 'runner',
+      activeSet,
+      runnerMode,
+      currentIndex,
+      userAnswers,
+      flaggedIds: Array.from(flaggedIds),
+      secondsRemaining,
+      lastUpdated: Date.now(),
+    });
+  }, [activeSet, runnerMode, currentIndex, userAnswers, flaggedIds, secondsRemaining, isFinished]);
+
+  // Ensure state is immediately saved when screen sleeps or tab hides
+  useEffect(() => {
+    const handleSaveOnHidden = () => {
+      if (document.visibilityState === 'hidden' && activeSet && !isFinished) {
+        saveActiveSession({
+          type: 'runner',
+          activeSet,
+          runnerMode,
+          currentIndex,
+          userAnswers,
+          flaggedIds: Array.from(flaggedIds),
+          secondsRemaining,
+          lastUpdated: Date.now(),
+        });
+      }
+    };
+    document.addEventListener('visibilitychange', handleSaveOnHidden);
+    window.addEventListener('pagehide', handleSaveOnHidden);
+    return () => {
+      document.removeEventListener('visibilitychange', handleSaveOnHidden);
+      window.removeEventListener('pagehide', handleSaveOnHidden);
+    };
+  }, [activeSet, runnerMode, currentIndex, userAnswers, flaggedIds, secondsRemaining, isFinished]);
 
   useEffect(() => {
     if (runnerMode !== 'exam' || isFinished) return;
@@ -144,6 +190,7 @@ export const CBTQuizRunner: React.FC = () => {
       missedQuestionIds: missedIds
     };
 
+    clearActiveSession();
     saveAttempt(attempt);
     setFinalAttempt(attempt);
     setIsFinished(true);

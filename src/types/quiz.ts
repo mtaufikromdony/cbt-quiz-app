@@ -55,3 +55,15 @@ export interface QuizStats {
   masteredCount: number;
   streakDays: number;
 }
+
+export interface ActiveSession {
+  type: 'runner' | 'flashcard';
+  activeSet: QuizSet;
+  runnerMode: 'exam' | 'practice';
+  currentIndex: number;
+  userAnswers: Record<string, UserAnswer>;
+  flaggedIds: string[];
+  secondsRemaining?: number;
+  lastUpdated: number;
+}
+

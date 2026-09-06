@@ -8,7 +8,7 @@ import { Progress } from '@/components/ui/progress';
 import { ArrowLeft, RotateCw, Volume2, Check, ChevronRight, ChevronLeft } from 'lucide-react';
 
 export const FlashcardRunner: React.FC = () => {
-  const { activeSet, setCurrentView } = useQuiz();
+  const { activeSet, setCurrentView, activeSession, saveActiveSession, clearActiveSession } = useQuiz();
 
   if (!activeSet || activeSet.questions.length === 0) {
     return (
@@ -21,8 +21,22 @@ export const FlashcardRunner: React.FC = () => {
     );
   }
 
-  const [cardIndex, setCardIndex] = useState(0);
+  const isResuming = activeSession && activeSession.type === 'flashcard' && activeSession.activeSet.id === activeSet.id;
+  const [cardIndex, setCardIndex] = useState(() => isResuming ? (activeSession?.currentIndex || 0) : 0);
   const [isFlipped, setIsFlipped] = useState(false);
+
+  useEffect(() => {
+    if (!activeSet) return;
+    saveActiveSession({
+      type: 'flashcard',
+      activeSet,
+      runnerMode: 'practice',
+      currentIndex: cardIndex,
+      userAnswers: {},
+      flaggedIds: [],
+      lastUpdated: Date.now(),
+    });
+  }, [activeSet, cardIndex]);
 
   const currentQuestion = activeSet.questions[cardIndex];
 
@@ -38,11 +52,12 @@ export const FlashcardRunner: React.FC = () => {
     if (cardIndex < activeSet.questions.length - 1) {
       setCardIndex(prev => prev + 1);
     } else {
+      clearActiveSession();
       soundFx.playFanfare();
       alert(`Flashcard review session completed (${activeSet.questions.length} cards).`);
       setCurrentView('dashboard');
     }
-  }, [cardIndex, activeSet.questions.length, setCurrentView]);
+  }, [cardIndex, activeSet.questions.length, setCurrentView, clearActiveSession]);
 
   // Keyboard navigation
   useEffect(() => {
