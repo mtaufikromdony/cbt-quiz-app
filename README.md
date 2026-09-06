@@ -1,32 +1,146 @@
-# React + TypeScript + Vite
+# CBT Quiz App
 
-This template provides a minimal setup to get React working in Vite with HMR and some Oxlint rules.
+Offline-first Computer-Based Testing (CBT) and active recall learning web application. Built with React 19, Vite, TypeScript, and Vanilla CSS.
 
-Currently, two official plugins are available:
+---
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+## Architecture
 
-## React Compiler
+The application uses React Context for state management and syncs data to browser `localStorage`. No external backend server is required.
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+```mermaid
+flowchart TD
+    subgraph UI ["User Interface Layer"]
+        Nav["Navbar (Theme & Audio Controls)"]
+        Dash["Dashboard (Quiz Grid & Search)"]
+        Editor["Quiz Editor & Bulk Import"]
+        Runner["CBT Exam / Practice Engine"]
+        Cards["3D Flashcard Runner"]
+        Stats["Analytics & History View"]
+    end
 
-## Expanding the Oxlint configuration
+    subgraph State ["State Management Layer"]
+        QuizCtx["QuizContext (QuizSets, Attempts, Active State)"]
+        ThemeCtx["ThemeContext (Dark / Light Theme)"]
+    end
 
-If you are developing a production application, we recommend enabling type-aware lint rules by installing `oxlint-tsgolint` and editing `.oxlintrc.json`:
+    subgraph Core ["Core Utilities & Data"]
+        Storage["LocalStorage Service"]
+        Audio["Web Audio API Synth & Speech Synthesis"]
+        Parser["JSON / CSV / Quick Text Parsers"]
+        MasterBank["GCP PDE Master Dataset (481 Questions)"]
+    end
 
-```json
-{
-  "$schema": "./node_modules/oxlint/configuration_schema.json",
-  "plugins": ["react", "typescript", "oxc"],
-  "options": {
-    "typeAware": true
-  },
-  "rules": {
-    "react/rules-of-hooks": "error",
-    "react/only-export-components": ["warn", { "allowConstantExport": true }]
-  }
-}
+    Nav --> ThemeCtx
+    Dash --> QuizCtx
+    Editor --> QuizCtx
+    Runner --> QuizCtx
+    Cards --> QuizCtx
+    Stats --> QuizCtx
+
+    QuizCtx --> Storage
+    QuizCtx --> MasterBank
+    Runner --> Audio
+    Cards --> Audio
+    Editor --> Parser
 ```
 
-See the [Oxlint rules documentation](https://oxc.rs/docs/guide/usage/linter/rules) for the full list of rules and categories.
+### Directory Structure
+
+```text
+cbt-quiz-app/
+├── public/
+├── src/
+│   ├── components/
+│   │   ├── analytics/        # Performance statistics and attempt logs
+│   │   ├── common/           # Navbar, QuizConfigModal (Session Setup)
+│   │   ├── dashboard/        # Quiz set grid, search, and category filters
+│   │   ├── flashcard/        # 3D flip card runner and Leitner rating buttons
+│   │   ├── quiz-editor/      # Question builder and bulk import modal
+│   │   └── quiz-runner/       # Timed CBT exam runner and score results modal
+│   ├── context/
+│   │   ├── QuizContext.tsx   # Quiz sets CRUD, attempt tracking, and state
+│   │   └── ThemeContext.tsx  # Theme state management
+│   ├── data/
+│   │   ├── defaultQuizzes.ts # Default pre-loaded quiz sets
+│   │   └── gcpPdeQuizzes.ts  # Master GCP PDE question bank (481 questions)
+│   ├── types/
+│   │   └── quiz.ts           # TypeScript interfaces (QuizSet, Question, Attempt)
+│   ├── utils/
+│   │   ├── confetti.ts       # Canvas confetti score launcher
+│   │   ├── exportImport.ts   # JSON, CSV, and formatted text parser
+│   │   └── sound.ts          # Web Audio synthesizer and Web Speech TTS
+│   ├── App.tsx
+│   ├── index.css             # High-clarity design system (Slate theme)
+│   └── main.tsx
+├── convert_docx_json.py      # Python script to convert .docx to JSON/CSV
+├── package.json
+└── vite.config.ts
+```
+
+---
+
+## Core Features
+
+- **CBT Exam Mode**: Timed exam interface with countdown clock, question palette, question flagging for review, and score reporting.
+- **Practice Mode**: Step-by-step practice with instant answer checking, hints, and explanations.
+- **3D Flashcards**: Flip card interface with Leitner difficulty ratings (Again, Hard, Good, Easy) and text-to-speech audio reader.
+- **Custom Session Setup**: Flexible batch launcher. Practice full question banks or split questions into custom subsets (e.g. 10, 25, 50, 100 questions, or custom ranges).
+- **Bulk Import & Export**: Import questions from JSON, CSV, or formatted plain text. Export any quiz set to JSON or CSV for backup.
+- **Analytics & History**: Track average scores, pass rates, study days, and generate review tests from previously missed questions.
+- **Offline Storage**: All quiz data, attempts, and custom sets persist in browser local storage.
+
+---
+
+## Data Conversion Tool
+
+The repository includes `convert_docx_json.py` to extract practice questions from Word (`.docx`) documents into structured JSON and CSV formats.
+
+Usage:
+```bash
+python3 convert_docx_json.py
+```
+This parses question prompts, choice options, correct answers, and explanations, creating both `GCP_PDE_Practice_QA.csv` and `src/data/gcpPdeQuizzes.ts`.
+
+---
+
+## Getting Started
+
+### Prerequisites
+
+- Node.js 18+ and npm
+
+### Installation & Local Development
+
+1. Clone the repository:
+   ```bash
+   git clone git@github.com:mtaufikromdony/cbt-quiz-app.git
+   cd cbt-quiz-app
+   ```
+
+2. Install dependencies:
+   ```bash
+   npm install
+   ```
+
+3. Start the development server:
+   ```bash
+   npm run dev
+   ```
+   Open `http://localhost:5173/` in your browser.
+
+### Exposing to Local Network / Other Devices
+
+To access the app from a phone, tablet, or another device on the same Wi-Fi network, run:
+```bash
+npm run dev -- --host
+```
+Vite will output your network IP (e.g. `http://192.168.x.x:5173/`).
+
+### Production Build
+
+Build the static distribution files:
+```bash
+npm run build
+```
+The output directory `/dist` can be hosted on static platforms like Vercel, Netlify, Cloudflare Pages, or GitHub Pages.
