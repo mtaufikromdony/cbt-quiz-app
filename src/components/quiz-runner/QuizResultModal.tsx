@@ -45,7 +45,7 @@ export const QuizResultModal: React.FC<Props> = ({ quizSet, attempt, onRetake })
       <Card className="p-8 text-center mb-6 shadow-sm">
         <CardContent className="p-0">
           <div className={`w-14 h-14 rounded-full mx-auto mb-4 flex items-center justify-center ${
-            isPassed ? 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400' : 'bg-destructive/15 text-destructive'
+            isPassed ? 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400' : 'bg-rose-500/15 text-rose-600 dark:text-rose-400'
           }`}>
             {isPassed ? <Award className="w-8 h-8" /> : <AlertTriangle className="w-8 h-8" />}
           </div>
@@ -60,7 +60,7 @@ export const QuizResultModal: React.FC<Props> = ({ quizSet, attempt, onRetake })
           <div className="flex justify-center items-center gap-4 flex-wrap mb-6">
             <div className="px-6 py-3 bg-secondary/50 rounded-lg border text-center min-w-[120px]">
               <span className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider block">PERCENTAGE</span>
-              <strong className={`text-2xl font-bold ${isPassed ? 'text-emerald-600 dark:text-emerald-400' : 'text-destructive'}`}>
+              <strong className={`text-2xl font-bold ${isPassed ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'}`}>
                 {attempt.percentage}%
               </strong>
             </div>
@@ -168,7 +168,7 @@ export const QuizResultModal: React.FC<Props> = ({ quizSet, attempt, onRetake })
                 ) : (
                   <div className="p-3 bg-secondary/50 rounded-md my-3 text-xs space-y-1">
                     <p className="text-muted-foreground">
-                      Your Answer: <strong className={isCorrect ? 'text-emerald-600 dark:text-emerald-400' : 'text-destructive'}>{uAns?.selected?.join(', ') || '(Blank)'}</strong>
+                      Your Answer: <strong className={isCorrect ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'}>{uAns?.selected?.join(', ') || '(Blank)'}</strong>
                     </p>
                     {!isCorrect && (
                       <p className="text-emerald-600 dark:text-emerald-400">

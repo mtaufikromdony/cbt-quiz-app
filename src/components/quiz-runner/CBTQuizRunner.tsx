@@ -195,11 +195,13 @@ export const CBTQuizRunner: React.FC = () => {
             {runnerMode === 'exam' && (
               <div className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md border text-sm font-bold font-mono transition-colors ${
                 secondsRemaining < 120 
-                  ? 'bg-destructive/15 text-destructive border-destructive/30 animate-pulse' 
-                  : 'bg-secondary text-foreground'
+                  ? 'bg-rose-500/20 dark:bg-rose-950/60 text-rose-600 dark:text-rose-300 border-rose-500/50 dark:border-rose-500/70 animate-pulse shadow-xs' 
+                  : 'bg-secondary/80 dark:bg-secondary/50 text-foreground border-border'
               }`}>
-                <Clock className="w-4 h-4" />
-                <span>{formatTimer(secondsRemaining)}</span>
+                <Clock className={`w-4 h-4 ${secondsRemaining < 120 ? 'text-rose-600 dark:text-rose-400' : 'text-primary dark:text-blue-400'}`} />
+                <span className={secondsRemaining < 120 ? 'text-rose-600 dark:text-rose-300' : 'text-foreground'}>
+                  {formatTimer(secondsRemaining)}
+                </span>
               </div>
             )}
 
