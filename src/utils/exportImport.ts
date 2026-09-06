@@ -1,31 +1,65 @@
 import type { Question, QuizSet } from '../types/quiz';
 
+async function triggerDownload(content: string, mimeType: string, fileName: string) {
+  // Chrome 86+ supports showSaveFilePicker — opens a native OS Save dialog
+  // with the correct filename pre-filled. Most reliable method on macOS Chrome.
+  if ('showSaveFilePicker' in window) {
+    try {
+      const ext = fileName.split('.').pop() ?? 'txt';
+      const handle = await (window as any).showSaveFilePicker({
+        suggestedName: fileName,
+        types: [
+          {
+            description: ext.toUpperCase() + ' file',
+            accept: { [mimeType.split(';')[0]]: ['.' + ext] },
+          },
+        ],
+      });
+      const writable = await handle.createWritable();
+      await writable.write(content);
+      await writable.close();
+      return;
+    } catch (e: any) {
+      if (e?.name === 'AbortError') return;
+      // Other errors: fall through to blob fallback
+    }
+  }
+
+  // Fallback: blob URL + hidden anchor click (Firefox, Safari, older Chrome)
+  const blob = new Blob([content], { type: mimeType });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.style.cssText = 'position:fixed;top:-9999px;left:-9999px;';
+  a.href = url;
+  a.download = fileName;
+  document.body.appendChild(a);
+  a.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true, view: window }));
+  setTimeout(() => {
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  }, 2000);
+}
+
 export function exportQuizSetToJSON(quizSet: QuizSet) {
   const jsonStr = JSON.stringify(quizSet, null, 2);
-  const blob = new Blob([jsonStr], { type: 'application/json' });
-  const url = URL.createObjectURL(blob);
-  
   const cleanTitle = (quizSet.title || 'quiz_set')
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, '_')
     .replace(/^_+|_+$/g, '');
   const fileName = `${cleanTitle || 'quiz_set'}.json`;
-
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = fileName;
-  a.setAttribute('download', fileName);
-  document.body.appendChild(a);
-  a.click();
-  
-  setTimeout(() => {
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
-  }, 150);
+  triggerDownload(jsonStr, 'application/json', fileName);
 }
 
 export function exportQuizSetToCSV(quizSet: QuizSet) {
-  const headers = ['Type', 'Prompt', 'Options (pipe separated)', 'Correct Answers (pipe separated)', 'Explanation', 'Hint', 'Points'];
+  const headers = [
+    'Type',
+    'Prompt',
+    'Options (pipe separated)',
+    'Correct Answers (pipe separated)',
+    'Explanation',
+    'Hint',
+    'Points',
+  ];
   const rows = quizSet.questions.map(q => [
     q.type,
     `"${(q.prompt || '').replace(/"/g, '""')}"`,
@@ -33,30 +67,15 @@ export function exportQuizSetToCSV(quizSet: QuizSet) {
     `"${(q.correctAnswers || []).join('|').replace(/"/g, '""')}"`,
     `"${(q.explanation || '').replace(/"/g, '""')}"`,
     `"${(q.hint || '').replace(/"/g, '""')}"`,
-    q.points || 1
+    q.points || 1,
   ]);
-
   const csvContent = [headers.join(','), ...rows.map(r => r.join(','))].join('\n');
-  const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-  const url = URL.createObjectURL(blob);
-
   const cleanTitle = (quizSet.title || 'quiz_set')
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, '_')
     .replace(/^_+|_+$/g, '');
   const fileName = `${cleanTitle || 'quiz_set'}.csv`;
-
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = fileName;
-  a.setAttribute('download', fileName);
-  document.body.appendChild(a);
-  a.click();
-
-  setTimeout(() => {
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
-  }, 150);
+  triggerDownload(csvContent, 'text/csv;charset=utf-8;', fileName);
 }
 
 export function parseQuickTextToQuestions(text: string): Question[] {
@@ -70,7 +89,7 @@ export function parseQuickTextToQuestions(text: string): Question[] {
     let correctStr = '';
     let explanation = '';
     let hint = '';
-    
+
     lines.forEach(line => {
       if (line.match(/^(Q:|Question\s*\d+:)/i)) {
         prompt = line.replace(/^(Q:|Question\s*\d+:)/i, '').trim();
@@ -109,7 +128,6 @@ export function parseQuickTextToQuestions(text: string): Question[] {
           indices.push(Number(lettr) - 1);
         }
       });
-      
       if (indices.length > 1) {
         type = 'multiple';
         correctAnswers = indices;
@@ -133,7 +151,7 @@ export function parseQuickTextToQuestions(text: string): Question[] {
       correctAnswers,
       explanation: explanation || undefined,
       hint: hint || undefined,
-      points: 1
+      points: 1,
     });
   });
 
