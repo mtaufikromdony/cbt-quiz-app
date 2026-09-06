@@ -1,21 +1,48 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useQuiz } from '../../context/QuizContext';
 import type { Question, QuestionType } from '../../types/quiz';
 import { BulkImportModal } from './BulkImportModal';
-import { ArrowLeft, Save, Plus, Trash2, Upload, CheckCircle2 } from 'lucide-react';
+import { ArrowLeft, Save, Plus, Trash2, Upload, Edit3, Check, X } from 'lucide-react';
 
 export const QuizEditor: React.FC = () => {
   const { editingSet, addQuizSet, updateQuizSet, setCurrentView } = useQuiz();
   const [showBulkImport, setShowBulkImport] = useState(false);
 
-  // Set Metadata Form
-  const [title, setTitle] = useState(editingSet?.title || '');
-  const [description, setDescription] = useState(editingSet?.description || '');
-  const [category, setCategory] = useState(editingSet?.category || 'General');
-  const [tags, setTags] = useState(editingSet?.tags.join(', ') || '');
-  const [color] = useState(editingSet?.color || '#6366f1');
-  const [timeLimitMinutes, setTimeLimitMinutes] = useState(editingSet?.timeLimitMinutes || 10);
-  const [questions, setQuestions] = useState<Question[]>(editingSet?.questions || []);
+  // Set Metadata Form State
+  const [title, setTitle] = useState('');
+  const [description, setDescription] = useState('');
+  const [category, setCategory] = useState('General');
+  const [tags, setTags] = useState('');
+  const [timeLimitMinutes, setTimeLimitMinutes] = useState(10);
+  const [questions, setQuestions] = useState<Question[]>([]);
+
+  // Sync state whenever editingSet changes
+  useEffect(() => {
+    if (editingSet) {
+      setTitle(editingSet.title || '');
+      setDescription(editingSet.description || '');
+      setCategory(editingSet.category || 'General');
+      setTags(editingSet.tags ? editingSet.tags.join(', ') : '');
+      setTimeLimitMinutes(editingSet.timeLimitMinutes || 10);
+      setQuestions(editingSet.questions || []);
+    } else {
+      setTitle('');
+      setDescription('');
+      setCategory('General');
+      setTags('');
+      setTimeLimitMinutes(10);
+      setQuestions([]);
+    }
+  }, [editingSet]);
+
+  // Inline Question Editing State
+  const [editingQId, setEditingQId] = useState<string | null>(null);
+  const [editPrompt, setEditPrompt] = useState('');
+  const [editType, setEditType] = useState<QuestionType>('single');
+  const [editOptions, setEditOptions] = useState<string[]>([]);
+  const [editCorrectAnswers, setEditCorrectAnswers] = useState<(number | string)[]>([]);
+  const [editExplanation, setEditExplanation] = useState('');
+  const [editHint, setEditHint] = useState('');
 
   // New Question Form State
   const [newType, setNewType] = useState<QuestionType>('single');
@@ -27,6 +54,38 @@ export const QuizEditor: React.FC = () => {
   const [newFlashcardAns, setNewFlashcardAns] = useState('');
   const [newExplanation, setNewExplanation] = useState('');
   const [newHint, setNewHint] = useState('');
+
+  // Start Inline Editing Question
+  const startEditingQuestion = (q: Question) => {
+    setEditingQId(q.id);
+    setEditPrompt(q.prompt);
+    setEditType(q.type);
+    setEditOptions(q.options ? [...q.options] : ['Option A', 'Option B', 'Option C', 'Option D']);
+    setEditCorrectAnswers(q.correctAnswers ? [...q.correctAnswers] : [0]);
+    setEditExplanation(q.explanation || '');
+    setEditHint(q.hint || '');
+  };
+
+  const saveEditedQuestion = () => {
+    if (!editPrompt.trim() || !editingQId) return;
+
+    setQuestions(prev => prev.map(q => {
+      if (q.id === editingQId) {
+        return {
+          ...q,
+          prompt: editPrompt.trim(),
+          type: editType,
+          options: (editType === 'single' || editType === 'multiple') ? editOptions : (editType === 'true-false' ? ['True', 'False'] : undefined),
+          correctAnswers: editCorrectAnswers,
+          explanation: editExplanation.trim() || undefined,
+          hint: editHint.trim() || undefined
+        };
+      }
+      return q;
+    }));
+
+    setEditingQId(null);
+  };
 
   const handleOptionChange = (idx: number, val: string) => {
     const updated = [...newOptions];
@@ -88,7 +147,6 @@ export const QuizEditor: React.FC = () => {
 
     setQuestions([...questions, questionObj]);
 
-    // Reset new question form
     setNewPrompt('');
     setNewExplanation('');
     setNewHint('');
@@ -102,7 +160,7 @@ export const QuizEditor: React.FC = () => {
 
   const handleSaveSet = () => {
     if (!title.trim()) {
-      alert('Please provide a Quiz Title.');
+      alert('Please enter a Quiz Title.');
       return;
     }
 
@@ -114,7 +172,6 @@ export const QuizEditor: React.FC = () => {
         description,
         category,
         tags: parsedTags,
-        color,
         timeLimitMinutes: Number(timeLimitMinutes) || undefined,
         questions
       });
@@ -124,7 +181,6 @@ export const QuizEditor: React.FC = () => {
         description,
         category,
         tags: parsedTags,
-        color,
         timeLimitMinutes: Number(timeLimitMinutes) || undefined,
         questions
       });
@@ -134,65 +190,65 @@ export const QuizEditor: React.FC = () => {
   };
 
   return (
-    <div style={{ padding: '0 24px 48px', maxWidth: '1000px', margin: '0 auto' }}>
+    <div style={{ padding: '0 24px 48px', maxWidth: '950px', margin: '0 auto' }}>
       {/* Top Header Controls */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', margin: '24px 0' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', margin: '20px 0' }}>
         <button className="btn btn-ghost" onClick={() => setCurrentView('dashboard')}>
-          <ArrowLeft size={20} /> Back to Dashboard
+          <ArrowLeft size={16} /> Back to Dashboard
         </button>
 
-        <div style={{ display: 'flex', gap: '12px' }}>
+        <div style={{ display: 'flex', gap: '8px' }}>
           <button className="btn btn-secondary" onClick={() => setShowBulkImport(true)}>
-            <Upload size={18} color="var(--accent-secondary)" /> Bulk Import
+            <Upload size={15} /> Bulk Import
           </button>
           <button className="btn btn-primary" onClick={handleSaveSet}>
-            <Save size={18} /> Save Quiz Set
+            <Save size={16} /> Save Quiz Set
           </button>
         </div>
       </div>
 
       {/* Quiz Set Details Panel */}
-      <div className="glass-panel" style={{ padding: '28px', marginBottom: '32px' }}>
-        <h2 style={{ fontSize: '1.25rem', marginBottom: '20px' }}>
-          {editingSet ? '✏️ Edit Quiz Set Details' : '✨ Create New Quiz Set'}
+      <div className="panel" style={{ padding: '24px', marginBottom: '24px' }}>
+        <h2 style={{ fontSize: '1.2rem', marginBottom: '16px', color: 'var(--text-primary)' }}>
+          {editingSet ? 'Edit Quiz Set Details' : 'Create New Quiz Set'}
         </h2>
 
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '20px' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: '16px' }}>
           <div>
-            <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 600, marginBottom: '6px' }}>Quiz Title *</label>
+            <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 600, marginBottom: '6px', color: 'var(--text-secondary)' }}>Quiz Title *</label>
             <input 
               type="text" 
               className="input-field" 
-              placeholder="e.g., AWS Solutions Architect Associate" 
+              placeholder="e.g. AWS Solutions Architect Practice" 
               value={title}
               onChange={e => setTitle(e.target.value)}
             />
           </div>
 
           <div>
-            <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 600, marginBottom: '6px' }}>Category</label>
+            <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 600, marginBottom: '6px', color: 'var(--text-secondary)' }}>Category</label>
             <input 
               type="text" 
               className="input-field" 
-              placeholder="e.g. Cloud Computing, History, Biology" 
+              placeholder="e.g. Cloud Computing, Science, History" 
               value={category}
               onChange={e => setCategory(e.target.value)}
             />
           </div>
 
           <div>
-            <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 600, marginBottom: '6px' }}>Tags (comma separated)</label>
+            <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 600, marginBottom: '6px', color: 'var(--text-secondary)' }}>Tags (comma separated)</label>
             <input 
               type="text" 
               className="input-field" 
-              placeholder="e.g. AWS, Cloud, Exam2026" 
+              placeholder="e.g. AWS, Cloud, Exam" 
               value={tags}
               onChange={e => setTags(e.target.value)}
             />
           </div>
 
           <div>
-            <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 600, marginBottom: '6px' }}>CBT Exam Time Limit (Minutes)</label>
+            <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 600, marginBottom: '6px', color: 'var(--text-secondary)' }}>Exam Time Limit (Minutes)</label>
             <input 
               type="number" 
               className="input-field" 
@@ -203,82 +259,168 @@ export const QuizEditor: React.FC = () => {
           </div>
         </div>
 
-        <div style={{ marginTop: '16px' }}>
-          <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 600, marginBottom: '6px' }}>Description</label>
+        <div style={{ marginTop: '14px' }}>
+          <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 600, marginBottom: '6px', color: 'var(--text-secondary)' }}>Description</label>
           <textarea 
             className="input-field" 
             rows={2} 
-            placeholder="Brief overview of what this quiz set covers..." 
+            placeholder="Overview of what this quiz set covers..." 
             value={description}
             onChange={e => setDescription(e.target.value)}
           />
         </div>
       </div>
 
-      {/* Questions List */}
-      <div style={{ marginBottom: '32px' }}>
-        <h3 style={{ fontSize: '1.2rem', marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+      {/* Questions List with Inline Editing */}
+      <div style={{ marginBottom: '24px' }}>
+        <h3 style={{ fontSize: '1.1rem', marginBottom: '14px', display: 'flex', alignItems: 'center', gap: '8px' }}>
           Questions ({questions.length})
         </h3>
 
         {questions.map((q, idx) => (
-          <div key={q.id} className="glass-card" style={{ padding: '20px', marginBottom: '16px' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '16px' }}>
+          <div key={q.id} className="panel" style={{ padding: '18px', marginBottom: '12px' }}>
+            {editingQId === q.id ? (
+              /* Inline Question Edit Form */
               <div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
-                  <span className="badge badge-indigo">Q{idx + 1} • {q.type.toUpperCase()}</span>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
+                  <span className="badge badge-blue">Editing Question {idx + 1}</span>
+                  <div style={{ display: 'flex', gap: '6px' }}>
+                    <button className="btn btn-secondary btn-sm" onClick={() => setEditingQId(null)}>
+                      <X size={14} /> Cancel
+                    </button>
+                    <button className="btn btn-primary btn-sm" onClick={saveEditedQuestion}>
+                      <Check size={14} /> Save Question
+                    </button>
+                  </div>
                 </div>
-                <h4 style={{ fontSize: '1.05rem', fontWeight: 600 }}>{q.prompt}</h4>
-              </div>
-              <button className="btn btn-ghost btn-sm" onClick={() => handleDeleteQuestion(q.id)} title="Delete Question">
-                <Trash2 size={18} color="#f43f5e" />
-              </button>
-            </div>
 
-            {q.options && (
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginTop: '12px' }}>
-                {q.options.map((opt, oIdx) => {
-                  const isCorrect = q.correctAnswers.includes(oIdx);
-                  return (
-                    <span 
-                      key={oIdx} 
-                      style={{
-                        padding: '4px 12px',
-                        borderRadius: 'var(--radius-sm)',
-                        fontSize: '0.85rem',
-                        background: isCorrect ? 'rgba(16, 185, 129, 0.15)' : 'var(--bg-input)',
-                        color: isCorrect ? '#34d399' : 'var(--text-secondary)',
-                        border: isCorrect ? '1px solid rgba(16, 185, 129, 0.3)' : '1px solid var(--border-color)',
-                        display: 'inline-flex',
-                        alignItems: 'center',
-                        gap: '6px'
-                      }}
-                    >
-                      {isCorrect && <CheckCircle2 size={14} />}
-                      {opt}
-                    </span>
-                  );
-                })}
-              </div>
-            )}
+                <div style={{ marginBottom: '12px' }}>
+                  <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: 600, color: 'var(--text-secondary)', marginBottom: '4px' }}>Question Prompt</label>
+                  <input
+                    type="text"
+                    className="input-field"
+                    value={editPrompt}
+                    onChange={e => setEditPrompt(e.target.value)}
+                  />
+                </div>
 
-            {q.explanation && (
-              <p style={{ marginTop: '10px', fontSize: '0.85rem', color: 'var(--text-muted)', fontStyle: 'italic' }}>
-                💡 {q.explanation}
-              </p>
+                {(editType === 'single' || editType === 'multiple') && editOptions && (
+                  <div style={{ marginBottom: '12px' }}>
+                    <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: 600, color: 'var(--text-secondary)', marginBottom: '6px' }}>Options & Correct Answer Selection:</label>
+                    {editOptions.map((opt, oIdx) => (
+                      <div key={oIdx} style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px' }}>
+                        <input
+                          type={editType === 'single' ? 'radio' : 'checkbox'}
+                          name="editCorrect"
+                          checked={editCorrectAnswers.includes(oIdx)}
+                          onChange={() => {
+                            if (editType === 'single') setEditCorrectAnswers([oIdx]);
+                            else {
+                              if (editCorrectAnswers.includes(oIdx)) {
+                                setEditCorrectAnswers(editCorrectAnswers.filter(i => i !== oIdx));
+                              } else {
+                                setEditCorrectAnswers([...editCorrectAnswers, oIdx]);
+                              }
+                            }
+                          }}
+                        />
+                        <input
+                          type="text"
+                          className="input-field"
+                          value={opt}
+                          onChange={e => {
+                            const updated = [...editOptions];
+                            updated[oIdx] = e.target.value;
+                            setEditOptions(updated);
+                          }}
+                        />
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginTop: '12px' }}>
+                  <div>
+                    <label style={{ display: 'block', fontSize: '0.8rem', color: 'var(--text-secondary)', marginBottom: '4px' }}>Explanation</label>
+                    <input
+                      type="text"
+                      className="input-field"
+                      value={editExplanation}
+                      onChange={e => setEditExplanation(e.target.value)}
+                    />
+                  </div>
+                  <div>
+                    <label style={{ display: 'block', fontSize: '0.8rem', color: 'var(--text-secondary)', marginBottom: '4px' }}>Hint</label>
+                    <input
+                      type="text"
+                      className="input-field"
+                      value={editHint}
+                      onChange={e => setEditHint(e.target.value)}
+                    />
+                  </div>
+                </div>
+              </div>
+            ) : (
+              /* Question Summary View */
+              <div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '12px' }}>
+                  <div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px' }}>
+                      <span className="badge badge-blue">Q{idx + 1} • {q.type.toUpperCase()}</span>
+                    </div>
+                    <h4 style={{ fontSize: '0.95rem', fontWeight: 600 }}>{q.prompt}</h4>
+                  </div>
+                  <div style={{ display: 'flex', gap: '4px' }}>
+                    <button className="btn btn-ghost btn-sm" onClick={() => startEditingQuestion(q)} title="Edit Question">
+                      <Edit3 size={15} color="var(--accent-blue)" />
+                    </button>
+                    <button className="btn btn-ghost btn-sm" onClick={() => handleDeleteQuestion(q.id)} title="Delete Question">
+                      <Trash2 size={15} color="var(--accent-rose)" />
+                    </button>
+                  </div>
+                </div>
+
+                {q.options && (
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginTop: '10px' }}>
+                    {q.options.map((opt, oIdx) => {
+                      const isCorrect = q.correctAnswers.includes(oIdx);
+                      return (
+                        <span 
+                          key={oIdx} 
+                          style={{
+                            padding: '3px 10px',
+                            borderRadius: 'var(--radius-sm)',
+                            fontSize: '0.8rem',
+                            background: isCorrect ? 'rgba(46, 160, 67, 0.12)' : 'var(--bg-input)',
+                            color: isCorrect ? '#3fb950' : 'var(--text-secondary)',
+                            border: isCorrect ? '1px solid rgba(46, 160, 67, 0.3)' : '1px solid var(--border-subtle)',
+                          }}
+                        >
+                          {String.fromCharCode(65 + oIdx)}. {opt}
+                        </span>
+                      );
+                    })}
+                  </div>
+                )}
+
+                {q.explanation && (
+                  <p style={{ marginTop: '8px', fontSize: '0.8rem', color: 'var(--text-muted)' }}>
+                    Explanation: {q.explanation}
+                  </p>
+                )}
+              </div>
             )}
           </div>
         ))}
       </div>
 
-      {/* Add New Question Section */}
-      <div className="glass-panel" style={{ padding: '28px' }}>
-        <h3 style={{ fontSize: '1.15rem', marginBottom: '20px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <Plus size={20} color="var(--accent-primary)" /> Add New Question
+      {/* Add Question Form */}
+      <div className="panel" style={{ padding: '24px' }}>
+        <h3 style={{ fontSize: '1.1rem', marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+          <Plus size={18} color="var(--accent-blue)" /> Add Question
         </h3>
 
-        {/* Type Selector */}
-        <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', marginBottom: '20px' }}>
+        <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap', marginBottom: '16px' }}>
           {(['single', 'multiple', 'true-false', 'fill-blank', 'flashcard'] as QuestionType[]).map(t => (
             <button
               key={t}
@@ -294,32 +436,29 @@ export const QuizEditor: React.FC = () => {
           ))}
         </div>
 
-        {/* Question Prompt */}
-        <div style={{ marginBottom: '20px' }}>
-          <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 600, marginBottom: '6px' }}>Question Prompt *</label>
+        <div style={{ marginBottom: '16px' }}>
+          <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 600, marginBottom: '6px', color: 'var(--text-secondary)' }}>Question Prompt *</label>
           <input
             type="text"
             className="input-field"
-            placeholder="Type your question or flashcard prompt..."
+            placeholder="Type question prompt..."
             value={newPrompt}
             onChange={e => setNewPrompt(e.target.value)}
           />
         </div>
 
-        {/* Dynamic Inputs Based on Type */}
         {(newType === 'single' || newType === 'multiple') && (
-          <div style={{ marginBottom: '20px' }}>
-            <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 600, marginBottom: '8px' }}>
-              Options (Click checkbox/radio to set correct answer):
+          <div style={{ marginBottom: '16px' }}>
+            <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 600, marginBottom: '6px', color: 'var(--text-secondary)' }}>
+              Options (Select radio/checkbox for correct answer):
             </label>
             {newOptions.map((opt, idx) => (
-              <div key={idx} style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '10px' }}>
+              <div key={idx} style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '8px' }}>
                 <input
                   type={newType === 'single' ? 'radio' : 'checkbox'}
                   name="correctOpt"
                   checked={newCorrectIndices.includes(idx)}
                   onChange={() => toggleCorrectIndex(idx)}
-                  style={{ width: '18px', height: '18px', cursor: 'pointer' }}
                 />
                 <input
                   type="text"
@@ -329,13 +468,13 @@ export const QuizEditor: React.FC = () => {
                 />
                 {newOptions.length > 2 && (
                   <button className="btn btn-ghost btn-sm" onClick={() => removeOptionField(idx)}>
-                    <Trash2 size={16} color="#f43f5e" />
+                    <Trash2 size={15} color="var(--accent-rose)" />
                   </button>
                 )}
               </div>
             ))}
             {newOptions.length < 6 && (
-              <button className="btn btn-ghost btn-sm" onClick={addOptionField} style={{ color: 'var(--accent-primary)' }}>
+              <button className="btn btn-ghost btn-sm" onClick={addOptionField} style={{ color: 'var(--accent-blue)' }}>
                 + Add Option Field
               </button>
             )}
@@ -343,17 +482,17 @@ export const QuizEditor: React.FC = () => {
         )}
 
         {newType === 'true-false' && (
-          <div style={{ marginBottom: '20px' }}>
-            <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 600, marginBottom: '8px' }}>Correct Answer:</label>
-            <div style={{ display: 'flex', gap: '12px' }}>
+          <div style={{ marginBottom: '16px' }}>
+            <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 600, marginBottom: '6px', color: 'var(--text-secondary)' }}>Correct Answer:</label>
+            <div style={{ display: 'flex', gap: '8px' }}>
               <button
-                className={`btn ${newTrueFalseAns === 'true' ? 'btn-primary' : 'btn-secondary'}`}
+                className={`btn btn-sm ${newTrueFalseAns === 'true' ? 'btn-primary' : 'btn-secondary'}`}
                 onClick={() => setNewTrueFalseAns('true')}
               >
                 True
               </button>
               <button
-                className={`btn ${newTrueFalseAns === 'false' ? 'btn-primary' : 'btn-secondary'}`}
+                className={`btn btn-sm ${newTrueFalseAns === 'false' ? 'btn-primary' : 'btn-secondary'}`}
                 onClick={() => setNewTrueFalseAns('false')}
               >
                 False
@@ -363,8 +502,8 @@ export const QuizEditor: React.FC = () => {
         )}
 
         {newType === 'fill-blank' && (
-          <div style={{ marginBottom: '20px' }}>
-            <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 600, marginBottom: '6px' }}>Correct Answer Word / Text</label>
+          <div style={{ marginBottom: '16px' }}>
+            <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 600, marginBottom: '6px', color: 'var(--text-secondary)' }}>Correct Answer Text</label>
             <input
               type="text"
               className="input-field"
@@ -376,36 +515,35 @@ export const QuizEditor: React.FC = () => {
         )}
 
         {newType === 'flashcard' && (
-          <div style={{ marginBottom: '20px' }}>
-            <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 600, marginBottom: '6px' }}>Flashcard Back (Answer & Key Takeaways)</label>
+          <div style={{ marginBottom: '16px' }}>
+            <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 600, marginBottom: '6px', color: 'var(--text-secondary)' }}>Flashcard Back (Answer & Key Notes)</label>
             <textarea
               className="input-field"
               rows={3}
-              placeholder="Detailed answer or explanation shown on back flip..."
+              placeholder="Answer shown on reverse card flip..."
               value={newFlashcardAns}
               onChange={e => setNewFlashcardAns(e.target.value)}
             />
           </div>
         )}
 
-        {/* Explanation & Hint */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '16px', marginBottom: '20px' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '14px', marginBottom: '16px' }}>
           <div>
-            <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 600, marginBottom: '6px' }}>Explanation (Optional)</label>
+            <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 600, marginBottom: '4px', color: 'var(--text-secondary)' }}>Explanation (Optional)</label>
             <input
               type="text"
               className="input-field"
-              placeholder="Why this answer is correct..."
+              placeholder="Explanation for correct answer..."
               value={newExplanation}
               onChange={e => setNewExplanation(e.target.value)}
             />
           </div>
           <div>
-            <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 600, marginBottom: '6px' }}>Hint (Optional)</label>
+            <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 600, marginBottom: '4px', color: 'var(--text-secondary)' }}>Hint (Optional)</label>
             <input
               type="text"
               className="input-field"
-              placeholder="Clue provided in Practice Mode..."
+              placeholder="Hint provided during practice..."
               value={newHint}
               onChange={e => setNewHint(e.target.value)}
             />
@@ -413,7 +551,7 @@ export const QuizEditor: React.FC = () => {
         </div>
 
         <button className="btn btn-primary" onClick={handleAddQuestion} style={{ width: '100%' }}>
-          <Plus size={18} /> Add Question to Set
+          <Plus size={16} /> Add Question to Set
         </button>
       </div>
 

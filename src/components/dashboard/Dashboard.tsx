@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
 import { useQuiz } from '../../context/QuizContext';
-import { exportQuizSetToJSON } from '../../utils/exportImport';
+import { exportQuizSetToCSV, exportQuizSetToJSON } from '../../utils/exportImport';
 import { BulkImportModal } from '../quiz-editor/BulkImportModal';
 import { QuizConfigModal } from '../common/QuizConfigModal';
 import type { QuizSet } from '../../types/quiz';
-import { Play, BookOpen, Edit, Trash2, Download, Search, Plus, Upload, Clock } from 'lucide-react';
+import { Play, BookOpen, Edit, Trash2, Download, Search, Plus, Upload, Clock, FileSpreadsheet } from 'lucide-react';
 
 export const Dashboard: React.FC = () => {
   const { quizSets, startConfiguredQuiz, startConfiguredFlashcard, openEditor, deleteQuizSet, getStats } = useQuiz();
@@ -123,9 +123,16 @@ export const Dashboard: React.FC = () => {
                     <button
                       className="btn btn-ghost btn-sm"
                       onClick={() => exportQuizSetToJSON(set)}
-                      title="Export as JSON"
+                      title="Export as JSON (.json)"
                     >
-                      <Download size={14} />
+                      <Download size={14} /> JSON
+                    </button>
+                    <button
+                      className="btn btn-ghost btn-sm"
+                      onClick={() => exportQuizSetToCSV(set)}
+                      title="Export as CSV (.csv)"
+                    >
+                      <FileSpreadsheet size={14} /> CSV
                     </button>
                     <button
                       className="btn btn-ghost btn-sm"

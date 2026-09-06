@@ -4,11 +4,24 @@ export function exportQuizSetToJSON(quizSet: QuizSet) {
   const jsonStr = JSON.stringify(quizSet, null, 2);
   const blob = new Blob([jsonStr], { type: 'application/json' });
   const url = URL.createObjectURL(blob);
+  
+  const cleanTitle = (quizSet.title || 'quiz_set')
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '_')
+    .replace(/^_+|_+$/g, '');
+  const fileName = `${cleanTitle || 'quiz_set'}.json`;
+
   const a = document.createElement('a');
   a.href = url;
-  a.download = `${quizSet.title.toLowerCase().replace(/[^a-z0-9]/g, '_')}_quiz.json`;
+  a.download = fileName;
+  a.setAttribute('download', fileName);
+  document.body.appendChild(a);
   a.click();
-  URL.revokeObjectURL(url);
+  
+  setTimeout(() => {
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  }, 150);
 }
 
 export function exportQuizSetToCSV(quizSet: QuizSet) {
@@ -26,16 +39,28 @@ export function exportQuizSetToCSV(quizSet: QuizSet) {
   const csvContent = [headers.join(','), ...rows.map(r => r.join(','))].join('\n');
   const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
   const url = URL.createObjectURL(blob);
+
+  const cleanTitle = (quizSet.title || 'quiz_set')
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '_')
+    .replace(/^_+|_+$/g, '');
+  const fileName = `${cleanTitle || 'quiz_set'}.csv`;
+
   const a = document.createElement('a');
   a.href = url;
-  a.download = `${quizSet.title.toLowerCase().replace(/[^a-z0-9]/g, '_')}_quiz.csv`;
+  a.download = fileName;
+  a.setAttribute('download', fileName);
+  document.body.appendChild(a);
   a.click();
-  URL.revokeObjectURL(url);
+
+  setTimeout(() => {
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  }, 150);
 }
 
 export function parseQuickTextToQuestions(text: string): Question[] {
   const questions: Question[] = [];
-  // Split by double newline or Q:
   const rawBlocks = text.split(/(?=\bQ:|\bQuestion\s*\d+:)/i).filter(b => b.trim().length > 0);
 
   rawBlocks.forEach((block, idx) => {
@@ -70,17 +95,15 @@ export function parseQuickTextToQuestions(text: string): Question[] {
     let type: Question['type'] = 'single';
     let correctAnswers: (number | string)[] = [];
 
-    // Parse answer string (e.g. "A", "B, C", "True", "False", or text)
     if (correctStr.match(/^(True|False)$/i)) {
       type = 'true-false';
       correctAnswers = [correctStr.toLowerCase()];
     } else if (options.length > 0) {
-      // Map letter index like A -> 0, B -> 1
       const selectedLetters = correctStr.toUpperCase().split(/[,|&]/).map(s => s.trim());
       const indices: number[] = [];
       selectedLetters.forEach(lettr => {
         const charCode = lettr.charCodeAt(0);
-        if (charCode >= 65 && charCode <= 69) { // A-E
+        if (charCode >= 65 && charCode <= 69) {
           indices.push(charCode - 65);
         } else if (!isNaN(Number(lettr))) {
           indices.push(Number(lettr) - 1);
