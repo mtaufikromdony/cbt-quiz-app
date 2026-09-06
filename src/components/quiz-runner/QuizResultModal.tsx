@@ -138,11 +138,17 @@ export const QuizResultModal: React.FC<Props> = ({ quizSet, attempt, onRetake })
                       const isRightAns = q.correctAnswers.includes(oIdx);
 
                       let stateClass = "bg-secondary/40 border-border text-muted-foreground";
+                      let letterBadge = "bg-secondary text-muted-foreground font-semibold";
+                      let textClass = "text-muted-foreground";
 
                       if (isRightAns) {
-                        stateClass = "bg-emerald-500/15 border-emerald-500/40 text-emerald-950 dark:text-emerald-200 font-medium";
+                        stateClass = "bg-emerald-500/15 dark:bg-emerald-950/60 border-emerald-500 text-emerald-900 dark:text-emerald-200 font-semibold ring-1 ring-emerald-500/50";
+                        letterBadge = "bg-emerald-600 dark:bg-emerald-500 text-white font-bold";
+                        textClass = "text-emerald-900 dark:text-emerald-200 font-semibold";
                       } else if (isSelected && !isRightAns) {
-                        stateClass = "bg-destructive/15 border-destructive/40 text-destructive font-medium";
+                        stateClass = "bg-destructive/15 dark:bg-rose-950/50 border-destructive text-destructive dark:text-rose-200 font-medium ring-1 ring-destructive/50";
+                        letterBadge = "bg-destructive text-white font-bold";
+                        textClass = "text-destructive dark:text-rose-200 font-medium";
                       }
 
                       return (
@@ -150,9 +156,11 @@ export const QuizResultModal: React.FC<Props> = ({ quizSet, attempt, onRetake })
                           key={oIdx} 
                           className={`p-2.5 rounded-md text-xs border flex items-start gap-2 ${stateClass}`}
                         >
-                          <span className="font-bold">{String.fromCharCode(65 + oIdx)}.</span> 
-                          <span className="flex-1">{opt}</span>
-                          {isSelected && <span className="text-[10px] opacity-80 shrink-0">(Selected)</span>}
+                          <span className={`w-5 h-5 inline-flex items-center justify-center rounded text-[11px] shrink-0 ${letterBadge}`}>
+                            {String.fromCharCode(65 + oIdx)}
+                          </span> 
+                          <span className={`flex-1 mt-0.5 ${textClass}`}>{opt}</span>
+                          {isSelected && <span className="text-[10px] opacity-80 shrink-0 mt-0.5 font-bold">(Selected)</span>}
                         </div>
                       );
                     })}

@@ -293,18 +293,26 @@ export const CBTQuizRunner: React.FC = () => {
             <div className="flex flex-col gap-2.5 mb-6">
               {currentQuestion.options.map((opt, oIdx) => {
                 const isSelected = currentSelection.includes(oIdx);
+                const isRevealed = runnerMode === 'practice' && practiceRevealed;
+                const isRight = currentQuestion.correctAnswers.includes(oIdx);
+
                 let stateClasses = "border-border bg-card hover:bg-accent/50 text-foreground";
+                let badgeClasses = isSelected ? "bg-primary text-primary-foreground font-bold" : "bg-secondary text-muted-foreground font-semibold";
+                let textClasses = "text-foreground";
 
                 if (isSelected) {
                   stateClasses = "border-primary bg-primary/10 text-foreground font-medium ring-1 ring-primary";
                 }
 
-                if (runnerMode === 'practice' && practiceRevealed) {
-                  const isRight = currentQuestion.correctAnswers.includes(oIdx);
+                if (isRevealed) {
                   if (isRight) {
-                    stateClasses = "border-emerald-500 bg-emerald-500/15 text-emerald-950 dark:text-emerald-200 font-medium";
+                    stateClasses = "border-emerald-500 bg-emerald-500/15 dark:bg-emerald-950/60 font-semibold ring-1 ring-emerald-500";
+                    badgeClasses = "bg-emerald-600 dark:bg-emerald-500 text-white font-bold shadow-xs";
+                    textClasses = "text-emerald-900 dark:text-emerald-200 font-semibold";
                   } else if (isSelected && !isRight) {
-                    stateClasses = "border-destructive bg-destructive/15 text-destructive font-medium";
+                    stateClasses = "border-destructive bg-destructive/15 dark:bg-rose-950/50 font-medium ring-1 ring-destructive";
+                    badgeClasses = "bg-destructive text-white font-bold shadow-xs";
+                    textClasses = "text-destructive dark:text-rose-200 font-medium";
                   }
                 }
 
@@ -314,12 +322,10 @@ export const CBTQuizRunner: React.FC = () => {
                     className={`p-3.5 rounded-lg border flex items-start gap-3.5 cursor-pointer transition-all ${stateClasses}`}
                     onClick={() => handleSelectOption(oIdx)}
                   >
-                    <span className={`inline-flex items-center justify-center w-6 h-6 rounded-md text-xs font-bold shrink-0 mt-0.5 ${
-                      isSelected ? 'bg-primary text-primary-foreground' : 'bg-secondary text-muted-foreground'
-                    }`}>
+                    <span className={`inline-flex items-center justify-center w-6 h-6 rounded-md text-xs shrink-0 mt-0.5 ${badgeClasses}`}>
                       {String.fromCharCode(65 + oIdx)}
                     </span>
-                    <span className="text-sm leading-relaxed flex-1">{opt}</span>
+                    <span className={`text-sm leading-relaxed flex-1 ${textClasses}`}>{opt}</span>
                   </div>
                 );
               })}
@@ -352,11 +358,30 @@ export const CBTQuizRunner: React.FC = () => {
                   )}
                 </div>
               ) : (
-                <div className="p-4 rounded-lg bg-secondary/50 border text-sm space-y-1">
-                  <h4 className="text-xs font-bold text-primary uppercase tracking-wider">Explanation</h4>
-                  <p className="text-sm text-foreground leading-relaxed m-0">
-                    {currentQuestion.explanation || `Correct Answer: ${currentQuestion.correctAnswers.join(', ')}`}
-                  </p>
+                <div className="p-4 rounded-xl bg-emerald-500/10 dark:bg-emerald-950/40 border border-emerald-500/30 text-sm space-y-1.5">
+                  <div className="flex items-center gap-2 text-emerald-700 dark:text-emerald-300 font-bold text-xs uppercase tracking-wider">
+                    <Check className="w-4 h-4 text-emerald-500" />
+                    <span>
+                      Correct Answer: {
+                        currentQuestion.options && currentQuestion.type !== 'fill-blank'
+                          ? currentQuestion.correctAnswers
+                              .map(ans => {
+                                const idx = typeof ans === 'number' ? ans : parseInt(String(ans), 10);
+                                if (!isNaN(idx) && currentQuestion.options && currentQuestion.options[idx]) {
+                                  return `${String.fromCharCode(65 + idx)}. ${currentQuestion.options[idx]}`;
+                                }
+                                return String(ans);
+                              })
+                              .join(', ')
+                          : currentQuestion.correctAnswers.join(', ')
+                      }
+                    </span>
+                  </div>
+                  {currentQuestion.explanation && (
+                    <p className="text-sm text-foreground/90 dark:text-emerald-100/90 leading-relaxed m-0 pl-6">
+                      {currentQuestion.explanation}
+                    </p>
+                  )}
                 </div>
               )}
 

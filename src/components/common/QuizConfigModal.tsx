@@ -74,7 +74,7 @@ export const QuizConfigModal: React.FC<Props> = ({ quizSet, mode, onClose, onSta
             <label className="text-xs font-semibold text-muted-foreground mb-2 block">
               Batch Split Presets (50 Questions):
             </label>
-            <div className="flex flex-wrap gap-1.5 max-h-28 overflow-y-auto p-1 bg-secondary/30 rounded-lg border">
+            <div className="flex flex-wrap gap-1.5 max-h-28 overflow-y-auto p-2 bg-muted/50 dark:bg-muted/20 rounded-lg border border-border">
               {presets.map((p, idx) => (
                 <Button
                   key={idx}
@@ -130,7 +130,7 @@ export const QuizConfigModal: React.FC<Props> = ({ quizSet, mode, onClose, onSta
               <label className="text-xs font-semibold text-muted-foreground mb-1.5 block">
                 Active Range:
               </label>
-              <div className="h-9 px-3 flex items-center rounded-md border bg-secondary/50 text-sm font-semibold text-primary">
+              <div className="h-9 px-3 flex items-center rounded-md border border-border bg-muted/60 dark:bg-muted/30 text-sm font-semibold text-primary">
                 Q{startRange} – Q{Math.min(totalQuestions, startRange + selectedCount - 1)}
               </div>
             </div>

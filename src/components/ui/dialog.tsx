@@ -31,14 +31,14 @@ const Dialog: React.FC<DialogProps> = ({ open, onClose, children, className }) =
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       {/* Backdrop */}
       <div
-        className="fixed inset-0 bg-black/60 backdrop-blur-sm transition-opacity animate-in fade-in"
+        className="fixed inset-0 bg-black/50 backdrop-blur-[2px] transition-opacity animate-in fade-in"
         onClick={onClose}
       />
 
       {/* Modal Dialog Content */}
       <div
         className={cn(
-          "relative z-50 w-full max-w-lg rounded-xl border bg-card p-6 text-card-foreground shadow-2xl transition-all duration-200 animate-in fade-in zoom-in-95 max-h-[90vh] overflow-y-auto",
+          "relative z-50 w-full max-w-lg rounded-xl border border-border bg-card bg-white dark:bg-[#0d1117] p-6 text-card-foreground shadow-2xl transition-all duration-200 animate-in fade-in zoom-in-95 max-h-[90vh] overflow-y-auto",
           className
         )}
       >
