@@ -47,6 +47,9 @@ export const QuizEditor: React.FC = () => {
   const [editCorrectAnswers, setEditCorrectAnswers] = useState<(number | string)[]>([]);
   const [editExplanation, setEditExplanation] = useState('');
   const [editHint, setEditHint] = useState('');
+  const [editTrueFalseAns, setEditTrueFalseAns] = useState<'true' | 'false'>('true');
+  const [editFillBlankAns, setEditFillBlankAns] = useState('');
+  const [editFlashcardAns, setEditFlashcardAns] = useState('');
 
   // New Question Form State
   const [newType, setNewType] = useState<QuestionType>('single');
@@ -68,10 +71,69 @@ export const QuizEditor: React.FC = () => {
     setEditCorrectAnswers(q.correctAnswers ? [...q.correctAnswers] : [0]);
     setEditExplanation(q.explanation || '');
     setEditHint(q.hint || '');
+
+    if (q.type === 'true-false') {
+      setEditTrueFalseAns(q.correctAnswers?.[0] === 'false' ? 'false' : 'true');
+    } else if (q.type === 'fill-blank') {
+      setEditFillBlankAns(String(q.correctAnswers?.[0] || ''));
+    } else if (q.type === 'flashcard') {
+      setEditFlashcardAns(String(q.correctAnswers?.[0] || ''));
+    }
+  };
+
+  const handleEditOptionChange = (idx: number, val: string) => {
+    const updated = [...editOptions];
+    updated[idx] = val;
+    setEditOptions(updated);
+  };
+
+  const addEditOptionField = () => {
+    if (editOptions.length < 10) {
+      const letter = String.fromCharCode(65 + editOptions.length);
+      setEditOptions([...editOptions, `Option ${letter}`]);
+    }
+  };
+
+  const removeEditOptionField = (idx: number) => {
+    if (editOptions.length > 2) {
+      setEditOptions(editOptions.filter((_, i) => i !== idx));
+      setEditCorrectAnswers(
+        editCorrectAnswers
+          .filter(ans => ans !== idx)
+          .map(ans => (typeof ans === 'number' && ans > idx ? ans - 1 : ans))
+      );
+    }
+  };
+
+  const toggleEditCorrectIndex = (idx: number) => {
+    if (editType === 'single') {
+      setEditCorrectAnswers([idx]);
+    } else {
+      if (editCorrectAnswers.includes(idx)) {
+        if (editCorrectAnswers.length > 1) {
+          setEditCorrectAnswers(editCorrectAnswers.filter(i => i !== idx));
+        }
+      } else {
+        setEditCorrectAnswers([...editCorrectAnswers, idx]);
+      }
+    }
   };
 
   const saveEditedQuestion = () => {
     if (!editPrompt.trim() || !editingQId) return;
+
+    let finalCorrectAnswers = editCorrectAnswers;
+    if (editType === 'single' || editType === 'multiple') {
+      if (finalCorrectAnswers.length === 0) {
+        finalCorrectAnswers = [0];
+      }
+    } else if (editType === 'true-false') {
+      finalCorrectAnswers = [editTrueFalseAns];
+    } else if (editType === 'fill-blank') {
+      finalCorrectAnswers = [editFillBlankAns.trim()];
+    } else if (editType === 'flashcard') {
+      finalCorrectAnswers = [editFlashcardAns.trim()];
+    }
 
     setQuestions(prev => prev.map(q => {
       if (q.id === editingQId) {
@@ -79,8 +141,10 @@ export const QuizEditor: React.FC = () => {
           ...q,
           prompt: editPrompt.trim(),
           type: editType,
-          options: (editType === 'single' || editType === 'multiple') ? editOptions : (editType === 'true-false' ? ['True', 'False'] : undefined),
-          correctAnswers: editCorrectAnswers,
+          options: (editType === 'single' || editType === 'multiple') 
+            ? editOptions 
+            : (editType === 'true-false' ? ['True', 'False'] : undefined),
+          correctAnswers: finalCorrectAnswers,
           explanation: editExplanation.trim() || undefined,
           hint: editHint.trim() || undefined
         };
@@ -98,7 +162,7 @@ export const QuizEditor: React.FC = () => {
   };
 
   const addOptionField = () => {
-    if (newOptions.length < 6) {
+    if (newOptions.length < 10) {
       setNewOptions([...newOptions, `Option ${String.fromCharCode(65 + newOptions.length)}`]);
     }
   };
@@ -298,6 +362,31 @@ export const QuizEditor: React.FC = () => {
                   </div>
                 </div>
 
+                {/* Question Type Switcher */}
+                <div className="flex gap-2 flex-wrap">
+                  {(['single', 'multiple', 'true-false', 'fill-blank', 'flashcard'] as QuestionType[]).map(t => (
+                    <Button
+                      key={t}
+                      variant={editType === t ? 'default' : 'secondary'}
+                      size="sm"
+                      onClick={() => {
+                        setEditType(t);
+                        if (t === 'true-false') {
+                          setEditTrueFalseAns('true');
+                        } else if (t === 'single' && editCorrectAnswers.length > 1) {
+                          setEditCorrectAnswers([editCorrectAnswers[0]]);
+                        }
+                      }}
+                    >
+                      {t === 'single' && 'Single Choice'}
+                      {t === 'multiple' && 'Multiple Choice'}
+                      {t === 'true-false' && 'True / False'}
+                      {t === 'fill-blank' && 'Fill in Blank'}
+                      {t === 'flashcard' && '3D Flashcard'}
+                    </Button>
+                  ))}
+                </div>
+
                 <div className="space-y-1.5">
                   <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Question Prompt</label>
                   <Input
@@ -308,8 +397,15 @@ export const QuizEditor: React.FC = () => {
                 </div>
 
                 {(editType === 'single' || editType === 'multiple') && editOptions && (
-                  <div className="space-y-2">
-                    <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Options & Correct Answer Selection:</label>
+                  <div className="space-y-2.5">
+                    <div className="flex items-center justify-between">
+                      <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                        Options & Correct Answer Selection:
+                      </label>
+                      <span className="text-xs text-muted-foreground">
+                        {editOptions.length} of 10 options
+                      </span>
+                    </div>
                     {editOptions.map((opt, oIdx) => (
                       <div key={oIdx} className="flex items-center gap-2.5">
                         <input
@@ -317,28 +413,81 @@ export const QuizEditor: React.FC = () => {
                           name="editCorrect"
                           className="h-4 w-4 rounded border-border text-primary focus:ring-primary accent-primary cursor-pointer"
                           checked={editCorrectAnswers.includes(oIdx)}
-                          onChange={() => {
-                            if (editType === 'single') setEditCorrectAnswers([oIdx]);
-                            else {
-                              if (editCorrectAnswers.includes(oIdx)) {
-                                setEditCorrectAnswers(editCorrectAnswers.filter(i => i !== oIdx));
-                              } else {
-                                setEditCorrectAnswers([...editCorrectAnswers, oIdx]);
-                              }
-                            }
-                          }}
+                          onChange={() => toggleEditCorrectIndex(oIdx)}
                         />
+                        <span className="w-6 h-6 rounded-md bg-muted text-foreground flex items-center justify-center text-xs font-bold shrink-0 border border-border">
+                          {String.fromCharCode(65 + oIdx)}
+                        </span>
                         <Input
                           type="text"
                           value={opt}
-                          onChange={e => {
-                            const updated = [...editOptions];
-                            updated[oIdx] = e.target.value;
-                            setEditOptions(updated);
-                          }}
+                          onChange={e => handleEditOptionChange(oIdx, e.target.value)}
                         />
+                        {editOptions.length > 2 && (
+                          <Button 
+                            variant="ghost" 
+                            size="icon" 
+                            onClick={() => removeEditOptionField(oIdx)} 
+                            className="h-9 w-9 text-destructive shrink-0 hover:bg-destructive/10"
+                            title="Remove option"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        )}
                       </div>
                     ))}
+                    {editOptions.length < 10 && (
+                      <Button variant="outline" size="sm" onClick={addEditOptionField} className="gap-1.5 text-xs">
+                        <Plus className="h-3.5 w-3.5" /> Add Option Field ({String.fromCharCode(65 + editOptions.length)})
+                      </Button>
+                    )}
+                  </div>
+                )}
+
+                {editType === 'true-false' && (
+                  <div className="space-y-2">
+                    <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Correct Answer:</label>
+                    <div className="flex gap-2">
+                      <Button
+                        variant={editTrueFalseAns === 'true' ? 'default' : 'secondary'}
+                        size="sm"
+                        onClick={() => setEditTrueFalseAns('true')}
+                      >
+                        True
+                      </Button>
+                      <Button
+                        variant={editTrueFalseAns === 'false' ? 'default' : 'secondary'}
+                        size="sm"
+                        onClick={() => setEditTrueFalseAns('false')}
+                      >
+                        False
+                      </Button>
+                    </div>
+                  </div>
+                )}
+
+                {editType === 'fill-blank' && (
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Correct Answer Text</label>
+                    <Input
+                      type="text"
+                      placeholder="e.g. Amazon Web Services"
+                      value={editFillBlankAns}
+                      onChange={e => setEditFillBlankAns(e.target.value)}
+                    />
+                  </div>
+                )}
+
+                {editType === 'flashcard' && (
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Flashcard Back (Answer & Key Notes)</label>
+                    <textarea
+                      className="flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm shadow-xs placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
+                      rows={3}
+                      placeholder="Answer shown on reverse card flip..."
+                      value={editFlashcardAns}
+                      onChange={e => setEditFlashcardAns(e.target.value)}
+                    />
                   </div>
                 )}
 
@@ -447,9 +596,14 @@ export const QuizEditor: React.FC = () => {
 
         {(newType === 'single' || newType === 'multiple') && (
           <div className="space-y-2.5">
-            <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-              Options (Select radio/checkbox for correct answer):
-            </label>
+            <div className="flex items-center justify-between">
+              <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                Options (Select radio/checkbox for correct answer):
+              </label>
+              <span className="text-xs text-muted-foreground">
+                {newOptions.length} of 10 options
+              </span>
+            </div>
             {newOptions.map((opt, idx) => (
               <div key={idx} className="flex items-center gap-2.5">
                 <input
@@ -459,21 +613,24 @@ export const QuizEditor: React.FC = () => {
                   checked={newCorrectIndices.includes(idx)}
                   onChange={() => toggleCorrectIndex(idx)}
                 />
+                <span className="w-6 h-6 rounded-md bg-muted text-foreground flex items-center justify-center text-xs font-bold shrink-0 border border-border">
+                  {String.fromCharCode(65 + idx)}
+                </span>
                 <Input
                   type="text"
                   value={opt}
                   onChange={e => handleOptionChange(idx, e.target.value)}
                 />
                 {newOptions.length > 2 && (
-                  <Button variant="ghost" size="icon" onClick={() => removeOptionField(idx)} className="h-9 w-9 text-destructive shrink-0">
+                  <Button variant="ghost" size="icon" onClick={() => removeOptionField(idx)} className="h-9 w-9 text-destructive shrink-0 hover:bg-destructive/10">
                     <Trash2 className="h-4 w-4" />
                   </Button>
                 )}
               </div>
             ))}
-            {newOptions.length < 6 && (
+            {newOptions.length < 10 && (
               <Button variant="outline" size="sm" onClick={addOptionField} className="gap-1.5 text-xs">
-                <Plus className="h-3.5 w-3.5" /> Add Option Field
+                <Plus className="h-3.5 w-3.5" /> Add Option Field ({String.fromCharCode(65 + newOptions.length)})
               </Button>
             )}
           </div>

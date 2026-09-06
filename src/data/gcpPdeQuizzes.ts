@@ -390,14 +390,16 @@ export const gcpPdeMasterQuizSet: QuizSet = {
         "Restrict access to tables by role.",
         "Ensure that the data is encrypted at all times.",
         "Restrict BigQuery API access to approved users.",
-        "Segregate data across multiple tables or databases."
+        "Segregate data across multiple tables or databases.",
+        "Use Google Stackdriver Audit Logging to determine policy violations."
       ],
       "correctAnswers": [
         1,
-        3
+        3,
+        5
       ],
-      "explanation": "F. Use Google Stackdriver Audit Logging to determine policy violations.  \u2605",
-      "hint": "Select 2 option(s).",
+      "explanation": "Correct answers: B, D, and F. Restricting access to tables by role, restricting BigQuery API access to approved users, and using Cloud (Stackdriver) Audit Logging to monitor policy violations enforce the principle of least privilege and regulatory compliance.",
+      "hint": "Select 3 option(s).",
       "points": 1
     },
     {
@@ -464,14 +466,16 @@ export const gcpPdeMasterQuizSet: QuizSet = {
         "Load data into a different dataset for each client.",
         "Put each client's BigQuery dataset into a different table.",
         "Restrict a client's dataset to approved users.",
-        "Only allow a service account to access the datasets."
+        "Only allow a service account to access the datasets.",
+        "Use the appropriate identity and access management (IAM) roles for each client's users."
       ],
       "correctAnswers": [
         1,
-        3
+        3,
+        5
       ],
-      "explanation": "F. Use the appropriate identity and access management (IAM) roles for each client's users.  \u2605",
-      "hint": "Select 2 option(s).",
+      "explanation": "Correct answers: B, D, and F. Loading data into separate datasets per client, restricting each dataset to approved users, and assigning appropriate IAM roles ensure full tenant data isolation.",
+      "hint": "Select 3 option(s).",
       "points": 1
     },
     {
@@ -686,14 +690,15 @@ export const gcpPdeMasterQuizSet: QuizSet = {
         "Unsupervised learning to determine which transactions are most likely to be fraudulent.",
         "Clustering to divide the transactions into N categories based on feature similarity.",
         "Supervised learning to predict the location of a transaction.",
-        "Reinforcement learning to predict the location of a transaction."
+        "Reinforcement learning to predict the location of a transaction.",
+        "Unsupervised learning to predict the location of a transaction."
       ],
       "correctAnswers": [
+        0,
         1,
-        2,
-        3
+        2
       ],
-      "explanation": "F. Unsupervised learning to predict the location of a transaction.",
+      "explanation": "Correct answers: A, B, and C. Supervised learning can identify known fraud patterns, unsupervised anomaly detection can flag novel fraudulent behavior, and clustering groups transactions by similarity.",
       "hint": "Select 3 option(s).",
       "points": 1
     },
@@ -1396,14 +1401,15 @@ export const gcpPdeMasterQuizSet: QuizSet = {
         "HBase",
         "MySQL",
         "MongoDB",
-        "Cassandra"
+        "Cassandra",
+        "HDFS with Hive"
       ],
       "correctAnswers": [
         1,
         3,
         4
       ],
-      "explanation": "F. HDFS with Hive",
+      "explanation": "Correct answers: B, D, and E. HBase, MongoDB, and Cassandra are horizontally scalable distributed NoSQL databases supporting low latency and attribute-level querying without requiring ACID guarantees.",
       "hint": "Select 3 option(s).",
       "points": 1
     },
@@ -1417,14 +1423,15 @@ export const gcpPdeMasterQuizSet: QuizSet = {
         "Reduce the number of training examples",
         "Use a smaller set of features",
         "Use a larger set of features",
-        "Increase the regularization parameters"
+        "Increase the regularization parameters",
+        "Decrease the regularization parameters"
       ],
       "correctAnswers": [
         0,
         2,
         4
       ],
-      "explanation": "F. Decrease the regularization parameters",
+      "explanation": "Correct answers: A, C, and E. Overfitting can be addressed by acquiring more training data, reducing model complexity through a smaller set of features, and increasing regularization parameters to penalize large weights.",
       "hint": "Select 3 option(s).",
       "points": 1
     },
