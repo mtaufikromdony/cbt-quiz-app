@@ -18,6 +18,29 @@ Offline-first Computer-Based Testing (CBT) and active recall learning web applic
 
 ---
 
+## Screenshots & Previews
+
+### Dashboard (Dark & Light Theme)
+| Dark Theme | Light Theme |
+| :---: | :---: |
+| ![Dashboard Dark](docs/images/dashboard-dark.png) | ![Dashboard Light](docs/images/dashboard-light.png) |
+
+### Analytics & History
+Track average scores, study streaks, and attempt logs with targeted missed question reviews:
+![Analytics & History](docs/images/analytics.png)
+
+### Create & Manage Quiz Sets (New Quiz)
+Comprehensive editor to build quiz sets, define passing parameters, and dynamically add/edit questions:
+![Quiz Editor & Creator](docs/images/new-quiz.png)
+
+### Session Setup & CBT Exam Mode
+Configure custom passing thresholds, question subsets, and timed exam simulations:
+| Session Setup & Passing Threshold | CBT Exam Runner |
+| :---: | :---: |
+| ![Session Setup](docs/images/session-setup.png) | ![CBT Exam Mode](docs/images/exam-mode.png) |
+
+---
+
 ## Bulk Import JSON Format
 
 You can import custom quiz sets or questions by uploading a `.json` file in the Bulk Import modal.
