@@ -92,15 +92,67 @@ cbt-quiz-app/
 
 ---
 
-## Data Conversion Tool
+## Bulk Import JSON Format
 
-The repository includes `convert_docx_json.py` to extract practice questions from Word (`.docx`) documents into structured JSON and CSV formats.
+You can import custom quiz sets or questions by uploading a `.json` file in the Bulk Import modal.
 
-Usage:
-```bash
-python3 convert_docx_json.py
+### Quiz Set JSON Example
+
+```json
+{
+  "title": "AWS Solutions Architect Practice",
+  "description": "Practice questions for AWS certification.",
+  "category": "Cloud Computing",
+  "tags": ["AWS", "Cloud"],
+  "timeLimitMinutes": 30,
+  "questions": [
+    {
+      "id": "q1",
+      "type": "single",
+      "prompt": "Which AWS service provides object storage?",
+      "options": ["Amazon EC2", "Amazon S3", "Amazon EBS", "Amazon DynamoDB"],
+      "correctAnswers": [1],
+      "explanation": "Amazon S3 is scalable object storage.",
+      "hint": "Simple Storage Service",
+      "points": 1
+    },
+    {
+      "id": "q2",
+      "type": "multiple",
+      "prompt": "Select all database ACID properties:",
+      "options": ["Atomicity", "Consistency", "Isolation", "Durability"],
+      "correctAnswers": [0, 1, 2, 3],
+      "explanation": "ACID stands for Atomicity, Consistency, Isolation, and Durability.",
+      "points": 2
+    },
+    {
+      "id": "q3",
+      "type": "true-false",
+      "prompt": "Containers share the host OS kernel.",
+      "options": ["True", "False"],
+      "correctAnswers": ["true"],
+      "explanation": "Docker containers leverage host kernel isolation.",
+      "points": 1
+    },
+    {
+      "id": "q4",
+      "type": "fill-blank",
+      "prompt": "What keyword declares a read-only variable in JavaScript?",
+      "correctAnswers": ["const"],
+      "explanation": "const creates a block-scoped constant.",
+      "points": 1
+    }
+  ]
+}
 ```
-This parses question prompts, choice options, correct answers, and explanations, creating both `GCP_PDE_Practice_QA.csv` and `src/data/gcpPdeQuizzes.ts`.
+
+### Question Types Field Reference
+
+- `single`: Single-choice question. `correctAnswers` uses 0-indexed option numbers (e.g. `[1]` for B).
+- `multiple`: Checkbox selection. `correctAnswers` lists all valid option indices (e.g. `[0, 2]`).
+- `true-false`: True or False selection. `correctAnswers` contains `["true"]` or `["false"]`.
+- `fill-blank`: Text input answer. `correctAnswers` contains target answer string.
+- `flashcard`: 3D card flip. `correctAnswers` contains answer text shown on the reverse side.
 
 ---
 
