@@ -138,7 +138,44 @@ npm run dev -- --host
 ```
 Vite will output your network IP (e.g. `http://192.168.x.x:5173/`).
 
-### Production Build
+### Running with Docker & Docker Compose
+
+You can containerize and run the application with zero external dependencies using Docker and Docker Compose.
+
+#### Using Docker Compose (Recommended)
+
+1. Build and start the container in detached mode:
+   ```bash
+   docker-compose up -d --build
+   ```
+2. Open your browser and navigate to:
+   ```
+   http://localhost:8080/
+   ```
+3. To stop the container:
+   ```bash
+   docker-compose down
+   ```
+
+> [!TIP]
+> You can override the host port by specifying `PORT`, for example: `PORT=3000 docker-compose up -d`
+
+#### Using Docker CLI Directly
+
+1. Build the Docker image:
+   ```bash
+   docker build -t cbt-quiz-app .
+   ```
+2. Run the container:
+   ```bash
+   docker run -d -p 8080:80 --name cbt-quiz-app --restart unless-stopped cbt-quiz-app
+   ```
+3. Stop or remove the container:
+   ```bash
+   docker stop cbt-quiz-app && docker rm cbt-quiz-app
+   ```
+
+### Production Build (Manual)
 
 Build the static distribution files:
 ```bash
