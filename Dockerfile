@@ -31,8 +31,8 @@ COPY nginx.conf /etc/nginx/conf.d/default.conf
 # Copy compiled static assets from builder stage
 COPY --from=builder /app/dist /usr/share/nginx/html
 
-# Expose standard HTTP port
-EXPOSE 80
+# Expose standard HTTP port (80) and Cloud Run port (8080)
+EXPOSE 80 8080
 
 # Healthcheck to ensure container availability
 HEALTHCHECK --interval=30s --timeout=3s --retries=3 \
