@@ -1,7 +1,9 @@
 import type { QuizSet } from '../types/quiz';
 import { gcpPdeMasterQuizSet } from './gcpPdeQuizzes';
+import { awsDevopsMasterQuizSet } from './awsDevopsQuizzes';
 
 export const defaultQuizSets: QuizSet[] = [
+  awsDevopsMasterQuizSet,
   gcpPdeMasterQuizSet,
   {
     id: 'sample_cbt_1',
